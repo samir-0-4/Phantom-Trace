@@ -18,6 +18,42 @@ const parse = (value) => {
   }
 };
 
+const getDescriptiveEvidenceTitle = (item) => {
+  if (!item) return 'Evidence Item';
+  const typeStr = item.type ? String(item.type) : '';
+  if (typeStr === 'EMAIL' || typeStr === 'EMAIL_MESSAGE') {
+    if (item.senderAddress && item.subject) {
+      return `Email from ${item.senderAddress} ("${item.subject}")`;
+    }
+    if (item.senderAddress) {
+      return `Email from ${item.senderAddress}`;
+    }
+    if (item.subject) {
+      return `Email: "${item.subject}"`;
+    }
+    return 'Email Evidence';
+  }
+  if (typeStr === 'URL' || item.url) {
+    return item.url ? `Target URL: ${item.url}` : 'Target URL Evidence';
+  }
+  if (typeStr === 'TEXT_MESSAGE' || typeStr === 'SMS' || typeStr === 'MESSAGE') {
+    if (item.senderAddress) {
+      return `Text Message from ${item.senderAddress}`;
+    }
+    return 'Suspicious Text Message';
+  }
+  if (typeStr === 'DOCUMENT' || typeStr === 'FILE') {
+    if (item.originalFilename) {
+      return `File: ${item.originalFilename}`;
+    }
+    return 'Document / File Evidence';
+  }
+  if (item.originalFilename) {
+    return `File: ${item.originalFilename}`;
+  }
+  return item.description ? `${titleCase(item.type)}: ${item.description}` : `${titleCase(item.type)} Evidence`;
+};
+
 const ReportFinding = ({ finding }) => (
   <article className="report-card rounded-2xl border border-white/[0.08] bg-[#0c101c] p-5 space-y-2.5 shadow-sm">
     <div className="flex items-start justify-between gap-3">
@@ -207,19 +243,33 @@ export const InvestigationReportPage = () => {
             </div>
           </section>
 
-          <Card title="Executive summary" className="shadow-card">
+          <Card title="Executive summary" className="report-card shadow-card">
             {summaries[0]?.summary ? (
-              <p className="text-xs sm:text-sm leading-relaxed text-slate-200 print:text-slate-800 whitespace-pre-wrap font-sans">
-                {summaries[0].summary}
-              </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge status="AI_INFERENCE">AI_INFERENCE</Badge>
+                </div>
+                <p className="text-xs sm:text-sm leading-relaxed text-slate-200 print:text-slate-800 whitespace-pre-wrap font-sans">
+                  {summaries[0].summary}
+                </p>
+              </div>
             ) : (
-              <p className="text-xs sm:text-sm text-slate-400">
-                Unknown — no structured executive summary was persisted.
-              </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-slate-800 border border-slate-700 px-2 py-0.5 text-2xs font-mono text-slate-400">
+                    AI analysis not run
+                  </span>
+                  <Badge status="VERIFIED">VERIFIED / DETERMINISTIC</Badge>
+                </div>
+                <p className="text-xs sm:text-sm leading-relaxed text-slate-200 print:text-slate-800 font-sans">
+                  {content?.deterministicExecutiveSummary ||
+                    `Deterministic forensic baseline: ${evidence.length} evidence artifact(s) evaluated. Overall risk level assessed as ${investigation?.overallRiskLevel || 'UNKNOWN'} (score: ${investigation?.riskScore || 0}/100). Campaign reconstruction classified footprint as ${campaignClassification}. AI multi-agent reasoning was not executed; all metrics derive strictly from deterministic parsing rules, cryptographic digests, and threat intelligence feeds.`}
+                </p>
+              </div>
             )}
           </Card>
 
-          <Card title="Overall risk assessment" className="shadow-card">
+          <Card title="Overall risk assessment" className="report-card shadow-card">
             {risk ? (
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-4">
@@ -239,6 +289,35 @@ export const InvestigationReportPage = () => {
                     {risk.disclaimer}
                   </p>
                 )}
+                {risk.contributingSignals?.length > 0 && (
+                  <div className="mt-4 space-y-2 border-t border-white/[0.08] pt-4 print:border-slate-300">
+                    <h4 className="text-2xs font-mono font-bold uppercase tracking-wider text-slate-400 print:text-slate-700">
+                      Itemized Risk Contributions ({risk.contributingSignals.length} signals)
+                    </h4>
+                    <div className="space-y-1.5">
+                      {risk.contributingSignals.map((sig, idx) => (
+                        <div
+                          key={sig.id || idx}
+                          className="flex items-center justify-between gap-3 rounded-lg border border-white/[0.05] bg-white/[0.02] p-2 text-xs font-mono print:border-slate-300 print:bg-slate-50"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="font-bold text-amber-400 print:text-amber-800">
+                              +{sig.weight}
+                            </span>
+                            <span className="text-slate-200 print:text-black truncate">
+                              {sig.signal}
+                            </span>
+                          </div>
+                          <div className="shrink-0">
+                            <Badge status={sig.epistemicBasis || (sig.signalKey?.startsWith('IMPERSONATION') ? 'AI_INFERENCE' : 'VERIFIED')}>
+                              {sig.epistemicBasis || (sig.signalKey?.startsWith('IMPERSONATION') ? 'AI_INFERENCE' : 'VERIFIED')}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <p className="text-xs sm:text-sm text-slate-400">
@@ -247,7 +326,7 @@ export const InvestigationReportPage = () => {
             )}
           </Card>
 
-          <Card title={`Evidence (${evidence.length})`} className="shadow-card">
+          <Card title={`Evidence (${evidence.length})`} className="report-card shadow-card">
             {evidence.length ? (
               <div className="space-y-3">
                 {evidence.map((item) => (
@@ -255,8 +334,8 @@ export const InvestigationReportPage = () => {
                     key={item.id}
                     className="report-card rounded-2xl border border-white/[0.08] bg-[#090e1a] p-4 space-y-2"
                   >
-                    <h3 className="font-bold text-slate-100 text-sm">
-                      {titleCase(item.type)}
+                    <h3 className="font-bold text-slate-100 print:text-black text-sm">
+                      {getDescriptiveEvidenceTitle(item)}
                     </h3>
                     <p className="text-xs text-slate-400 font-mono">
                       {item.description || 'No description provided.'}
@@ -453,8 +532,10 @@ export const InvestigationReportPage = () => {
               </div>
               <div>
                 <span className="block text-slate-500">INTEGRITY DIGEST:</span>
-                <span className="font-semibold text-slate-200 print:text-black truncate block">
-                  SHA256:{investigation?.id ? investigation.id.replace(/-/g, '').slice(0, 32) : 'AFF8294B01E'}
+                <span className="font-semibold text-slate-200 print:text-black truncate block font-mono text-2xs">
+                  {content?.integrityDigest
+                    ? `SHA256:${content.integrityDigest}`
+                    : (investigation?.id ? `REPORT:${investigation.id}` : 'UNKNOWN')}
                 </span>
               </div>
             </div>

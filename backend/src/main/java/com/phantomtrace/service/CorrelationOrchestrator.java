@@ -237,12 +237,18 @@ public class CorrelationOrchestrator {
         indicators.forEach(item -> nodes.add(new GraphNode("indicator:" + item.getId(),
                 item.getIndicatorType().name(), item.getNormalizedValue(), item.getSourceEvidence().getId().toString(),
                 item.getIndicatorType().name(), item.getExternalVerificationStatus())));
-        List<GraphEdge> edges = relationships.stream().map(item -> new GraphEdge("relationship:" + item.getId(),
-                "evidence:" + item.getSourceEvidence().getId(),
-                item.getTargetIndicator() == null ? "evidence:" + item.getTargetEvidence().getId()
-                        : "indicator:" + item.getTargetIndicator().getId(),
-                item.getRelationshipType().name(), item.getVerificationStatus().name(), item.getConfidence(),
-                item.getExplanation(), item.getSourceReference())).toList();
+        Map<String, GraphEdge> uniqueEdges = new LinkedHashMap<>();
+        for (EvidenceRelationship item : relationships) {
+            String source = "evidence:" + item.getSourceEvidence().getId();
+            String target = item.getTargetIndicator() == null ? "evidence:" + item.getTargetEvidence().getId()
+                    : "indicator:" + item.getTargetIndicator().getId();
+            String type = item.getRelationshipType().name();
+            String edgeKey = source + "|" + target + "|" + type;
+            uniqueEdges.putIfAbsent(edgeKey, new GraphEdge("relationship:" + item.getId(),
+                    source, target, type, item.getVerificationStatus().name(), item.getConfidence(),
+                    item.getExplanation(), item.getSourceReference()));
+        }
+        List<GraphEdge> edges = new ArrayList<>(uniqueEdges.values());
         return new InvestigationGraphResponse(investigation.getId().toString(), nodes, edges);
     }
 }

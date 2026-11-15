@@ -10,7 +10,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
 [![Vercel Frontend](https://img.shields.io/badge/Vercel-Frontend%20Live-black.svg?logo=vercel)](https://phantomtrace04.vercel.app)
 [![Render Backend](https://img.shields.io/badge/Render-Backend%20Live-46E3B7.svg?logo=render)](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health)
-[![Backend Tests](https://img.shields.io/badge/Backend%20Tests-202%2F202%20Passing-brightgreen.svg)]()
+[![Backend Tests](https://img.shields.io/badge/Backend%20Tests-211%2F211%20Passing-brightgreen.svg)]()
 [![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-33%2F33%20Passing-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Kiroween Category](https://img.shields.io/badge/Kiroween%202026-Frankenstein-red.svg)]()
@@ -548,7 +548,7 @@ cd frontend && npm test -- --run && npm run lint && npm run build
 
 | Test Suite | Total Tests | Passed | Failed | Errors | Skipped | Status |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Backend Suite (JUnit 5 + Mockito + jqwik PBT)** | **202** | **202** | **0** | **0** | **0** | ✅ **PASSING** |
+| **Backend Suite (JUnit 5 + Mockito + jqwik PBT)** | **211** | **211** | **0** | **0** | **0** | ✅ **PASSING** |
 | **Frontend Suite (Vitest + RTL)** | **33** | **33** | **0** | **0** | **0** | ✅ **PASSING** |
 | **Frontend ESLint Check** | Codebase | Clean | **0** | **0** | — | ✅ **0 ERRORS / 0 WARNS** |
 | **Frontend Production Build (Vite)** | 1,727 modules | Clean | **0** | **0** | — | ✅ **BUILT IN ~1.6s** |

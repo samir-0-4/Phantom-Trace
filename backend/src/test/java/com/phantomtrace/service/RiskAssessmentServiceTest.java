@@ -180,6 +180,63 @@ class RiskAssessmentServiceTest {
         assertThat(result.category()).isEqualTo(RiskCategory.CRITICAL);
     }
 
+    @Test
+    void countsEachSignalTypeOncePerInvestigationAcrossMultipleEvidenceAndTerms() {
+        Evidence ev1 = evidence("First message: please pay fee and share password");
+        Evidence ev2 = evidence("Second message: deposit processing_fee and provide pin immediately");
+        ExtractedIndicator pay1 = indicator(ev1, IndicatorType.PAYMENT_TERM, "pay");
+        ExtractedIndicator pay2 = indicator(ev1, IndicatorType.PAYMENT_TERM, "fee");
+        ExtractedIndicator pay3 = indicator(ev2, IndicatorType.PAYMENT_TERM, "deposit");
+        ExtractedIndicator cred1 = indicator(ev1, IndicatorType.CREDENTIAL_TERM, "password");
+        ExtractedIndicator cred2 = indicator(ev2, IndicatorType.OTP_TERM, "pin");
+        ExtractedIndicator urg1 = indicator(ev2, IndicatorType.URGENCY_INDICATOR, "immediately");
+
+        when(evidenceRepository.findByInvestigationIdOrderByCreatedAtDesc(investigationId)).thenReturn(List.of(ev1, ev2));
+        when(extractedRepository.findByEvidenceInvestigationId(investigationId))
+                .thenReturn(List.of(pay1, pay2, pay3, cred1, cred2, urg1));
+
+        var result = service.assess(investigationId);
+
+        // PAYMENT (+20) once + CREDENTIAL_OTP (+25) once + URGENCY (+10) once = 55
+        assertThat(result.score()).isEqualTo(55);
+        assertThat(result.contributingSignals()).hasSize(3);
+
+        // Verify signal weights and epistemic basis
+        assertThat(result.contributingSignals()).anySatisfy(sig -> {
+            if ("PAYMENT".equals(sig.signalKey())) {
+                assertThat(sig.weight()).isEqualTo(20);
+                assertThat(sig.epistemicBasis()).isEqualTo("VERIFIED");
+            } else if ("CREDENTIAL_OTP".equals(sig.signalKey())) {
+                assertThat(sig.weight()).isEqualTo(25);
+                assertThat(sig.epistemicBasis()).isEqualTo("VERIFIED");
+            } else if ("URGENCY".equals(sig.signalKey())) {
+                assertThat(sig.weight()).isEqualTo(10);
+                assertThat(sig.epistemicBasis()).isEqualTo("VERIFIED");
+            }
+        });
+    }
+
+    @Test
+    void confidenceNeverReachesOneHundredPercentWhenThreatIntelAndAiAreUnknown() {
+        Evidence ev = evidence("Pay fee urgent password pin");
+        ExtractedIndicator pay = indicator(ev, IndicatorType.PAYMENT_TERM, "pay");
+        ExtractedIndicator cred = indicator(ev, IndicatorType.CREDENTIAL_TERM, "password");
+
+        when(evidenceRepository.findByInvestigationIdOrderByCreatedAtDesc(investigationId)).thenReturn(List.of(ev));
+        when(extractedRepository.findByEvidenceInvestigationId(investigationId)).thenReturn(List.of(pay, cred));
+        // threat intel is unknown / empty
+        when(lookupRepository.findByIndicatorId(any())).thenReturn(List.of());
+
+        var result = service.assess(investigationId);
+
+        // Confidence MUST NOT show 100% (1.0)
+        assertThat(result.confidence()).isLessThan(1.0);
+        assertThat(result.confidence()).isLessThanOrEqualTo(0.70);
+        assertThat(result.explanation()).contains("Confidence is capped");
+        assertThat(result.missingInformation()).contains("External threat intelligence");
+        assertThat(result.missingInformation()).contains("Forensic AI agent analysis has not been executed");
+    }
+
     private Evidence evidence(String text) {
         Evidence value = new Evidence(investigation, EvidenceType.TEXT_MESSAGE, null);
         ReflectionTestUtils.setField(value, "id", UUID.randomUUID());

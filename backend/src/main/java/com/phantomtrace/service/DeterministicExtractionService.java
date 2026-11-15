@@ -15,9 +15,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -83,16 +85,33 @@ public class DeterministicExtractionService {
         extractSignals(content, candidates);
 
         if (evidence.getEvidenceType() == EvidenceType.URL && evidence.getUrl() != null) {
-            addUrl(evidence.getUrl(), candidates);
+            addUrl(trimUrlPunctuation(evidence.getUrl()), candidates);
         }
 
         Instant extractedAt = Instant.now();
+        List<ExtractedIndicator> existing = evidence.getId() != null
+                ? repository.findByEvidenceIdOrderByExtractedAtAsc(evidence.getId())
+                : null;
+        if (existing == null) {
+            existing = List.of();
+        }
+        Set<String> existingKeys = existing.stream()
+                .map(i -> i.getIndicatorType().name() + "\u0000" + (i.getNormalizedValue() != null ? i.getNormalizedValue().trim().toLowerCase(Locale.ROOT) : ""))
+                .collect(Collectors.toSet());
+
         List<ExtractedIndicator> persisted = candidates.values().stream()
+                .filter(candidate -> {
+                    String normKey = candidate.normalizedValue() != null ? candidate.normalizedValue().trim().toLowerCase(Locale.ROOT) : "";
+                    return !existingKeys.contains(candidate.type().name() + "\u0000" + normKey);
+                })
                 .map(candidate -> new ExtractedIndicator(evidence, candidate.type(), candidate.originalValue(),
                         candidate.normalizedValue(), METHOD, extractedAt))
                 .map(repository::save)
                 .toList();
-        return persisted.stream().map(ExtractedIndicatorResponse::fromEntity).toList();
+
+        List<ExtractedIndicator> all = new ArrayList<>(existing);
+        all.addAll(persisted);
+        return all.stream().map(ExtractedIndicatorResponse::fromEntity).toList();
     }
 
     @Transactional(readOnly = true)
@@ -147,7 +166,8 @@ public class DeterministicExtractionService {
     }
 
     private void add(Map<String, Candidate> candidates, IndicatorType type, String original, String normalized) {
-        String key = type.name() + "\u0000" + original + "\u0000" + normalized;
+        String normKey = normalized != null ? normalized.trim().toLowerCase(Locale.ROOT) : "";
+        String key = type.name() + "\u0000" + normKey;
         candidates.putIfAbsent(key, new Candidate(type, original, normalized));
     }
 
@@ -177,8 +197,28 @@ public class DeterministicExtractionService {
         return String.join("\n", fields);
     }
 
-    private String trimUrlPunctuation(String value) {
-        return value.replaceFirst("[.,!?;:]+$", "").replaceFirst("\\)$", "");
+    public static String trimUrlPunctuation(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        boolean changed = true;
+        while (changed && !trimmed.isEmpty()) {
+            changed = false;
+            // Trim 3-dot ellipsis
+            if (trimmed.endsWith("...")) {
+                trimmed = trimmed.substring(0, trimmed.length() - 3);
+                changed = true;
+            } else if (trimmed.endsWith("…") || trimmed.endsWith("\u2026") || trimmed.endsWith("\u2025")) {
+                trimmed = trimmed.substring(0, trimmed.length() - 1);
+                changed = true;
+            }
+            // Trim trailing punctuation, quotes, brackets
+            int lenBefore = trimmed.length();
+            trimmed = trimmed.replaceFirst("[.,!?;:)\\]}>'\"”’`]+$", "");
+            if (trimmed.length() != lenBefore) {
+                changed = true;
+            }
+        }
+        return trimmed;
     }
 
     private record Candidate(IndicatorType type, String originalValue, String normalizedValue) {

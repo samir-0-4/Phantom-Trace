@@ -141,7 +141,9 @@ public class CampaignReconstructionService {
                 tracker.investigationTitles().put(otherInvId, otherTitle);
                 tracker.evidenceIds().add(otherInd.getEvidence().getId().toString());
                 if (otherInd.getId() != null) tracker.indicatorEntityIds().add(otherInd.getId());
-                otherInvestigationCache.putIfAbsent(otherInvId, otherInd.getEvidence().getInvestigation());
+                if (isInfrastructureType(tracker.indicatorType())) {
+                    otherInvestigationCache.putIfAbsent(otherInvId, otherInd.getEvidence().getInvestigation());
+                }
             }
         }
 
@@ -179,9 +181,15 @@ public class CampaignReconstructionService {
             }
         }
 
-        // Build Connected Investigations
+        // Build Connected Investigations - only infrastructure types count
         Map<UUID, List<String>> invToSharedIndicators = new LinkedHashMap<>();
         for (SharedIndicatorDto shared : sharedIndicators) {
+            boolean isInfra = false;
+            try {
+                isInfra = isInfrastructureType(IndicatorType.valueOf(shared.type()));
+            } catch (Exception ignored) {}
+            if (!isInfra) continue;
+
             if (shared.investigationIds() != null) {
                 for (String invIdStr : shared.investigationIds()) {
                     UUID invId = UUID.fromString(invIdStr);
@@ -262,24 +270,49 @@ public class CampaignReconstructionService {
                 .filter(si -> !SyntheticIndicatorDetector.isExplicitSyntheticDemoFixture(si.value()))
                 .toList();
 
+        List<SharedIndicatorDto> genuineInfrastructureIndicators = genuineSharedIndicators.stream()
+                .filter(si -> {
+                    try {
+                        return isInfrastructureType(IndicatorType.valueOf(si.type()));
+                    } catch (Exception e) {
+                        return false;
+                    }
+                })
+                .toList();
+
+        List<SharedIndicatorDto> lexicalSharedIndicators = genuineSharedIndicators.stream()
+                .filter(si -> {
+                    try {
+                        return isLexicalType(IndicatorType.valueOf(si.type()));
+                    } catch (Exception e) {
+                        return false;
+                    }
+                })
+                .toList();
+
         if (isCurrentDemo) {
             // Synthetic investigations are ALWAYS classified as SYNTHETIC_DEMO_CAMPAIGN or ISOLATED_INCIDENT
             classification = sharedIndicators.isEmpty() ? CLASSIFICATION_ISOLATED : CLASSIFICATION_SYNTHETIC_DEMO;
         } else {
             // Current investigation is GENUINE:
-            // Real-world attribution is strictly derived from genuine evidence and genuine connected dossiers.
-            long genuineCrossCaseSharedCount = genuineSharedIndicators.stream()
+            // Real-world attribution is strictly derived from genuine infrastructure and genuine connected dossiers.
+            // Lexical indicators (URGENCY, OTP, CREDENTIAL, PAYMENT, MESSAGE_SIGNAL) are strictly excluded from PROBABLE/CONFIRMED.
+            long genuineCrossCaseSharedCount = genuineInfrastructureIndicators.stream()
                     .filter(SharedIndicatorDto::crossInvestigation)
                     .count();
 
             boolean hasGenuineConnectedCase = genuineCrossCaseCount > 0;
-            boolean genuineHasIndependentCorroboration = hasGenuineConnectedCase || genuineSharedIndicators.size() >= 2;
+            boolean genuineHasIndependentCorroboration = hasGenuineConnectedCase || genuineInfrastructureIndicators.size() >= 2;
 
-            if (genuineSharedIndicators.isEmpty()) {
-                classification = CLASSIFICATION_ISOLATED;
+            if (genuineInfrastructureIndicators.isEmpty()) {
+                if (!lexicalSharedIndicators.isEmpty()) {
+                    classification = CLASSIFICATION_POSSIBLE;
+                } else {
+                    classification = CLASSIFICATION_ISOLATED;
+                }
             } else if (hasVerifiedMaliciousThreatHit && genuineHasIndependentCorroboration) {
                 classification = CLASSIFICATION_CONFIRMED;
-            } else if (genuineCrossCaseSharedCount >= 2 || genuineSharedIndicators.size() >= 3) {
+            } else if (genuineCrossCaseCount >= 1 && (genuineCrossCaseSharedCount >= 2 || genuineInfrastructureIndicators.size() >= 2)) {
                 classification = CLASSIFICATION_PROBABLE;
             } else {
                 classification = CLASSIFICATION_POSSIBLE;
@@ -288,41 +321,55 @@ public class CampaignReconstructionService {
 
         List<CampaignSignalDto> campaignSignals = new ArrayList<>();
         if (!sharedIndicators.isEmpty()) {
-            int sharedCount = isCurrentDemo ? sharedIndicators.size() : genuineSharedIndicators.size();
+            int sharedCount = isCurrentDemo ? sharedIndicators.size() : genuineInfrastructureIndicators.size();
             Set<String> allSupportingEvidenceIds = new LinkedHashSet<>();
             Set<String> allSupportingInvIds = new LinkedHashSet<>();
-            (isCurrentDemo ? sharedIndicators : genuineSharedIndicators).forEach(si -> {
+            (isCurrentDemo ? sharedIndicators : genuineInfrastructureIndicators).forEach(si -> {
                 allSupportingEvidenceIds.addAll(si.evidenceIds());
                 if (si.investigationIds() != null) allSupportingInvIds.addAll(si.investigationIds());
             });
 
-            String signalDescription;
-            if (isCurrentDemo) {
-                signalDescription = sharedCount + " synthetic demonstration indicator(s) cross-correlated across "
-                        + (connectedInvestigations.size() + 1) + " demonstration cases (RFC 2606/5737 test fixtures)";
-            } else if (genuineSharedIndicators.isEmpty()) {
-                signalDescription = "Zero genuine shared indicators observed; incident exhibits isolated characteristics";
-            } else if (hasVerifiedMaliciousThreatHit && (genuineCrossCaseCount > 0 || genuineSharedIndicators.size() >= 2)) {
-                signalDescription = sharedCount + " shared indicator(s) confirmed malicious by threat intelligence feeds — confirmed coordinated campaign";
-            } else if (genuineCrossCaseCount >= 1 && sharedCount >= 2) {
-                signalDescription = sharedCount + " shared indicator(s) cross-correlated across "
-                        + (genuineCrossCaseCount + 1) + " investigations — multi-case attack campaign detected";
-            } else if (genuineCrossCaseCount >= 1) {
-                signalDescription = sharedCount + " shared indicator(s) cross-correlated across "
-                        + (genuineCrossCaseCount + 1) + " investigations — possible multi-case correlation";
-            } else {
-                signalDescription = sharedCount >= 3
-                        ? sharedCount + " shared indicator(s) detected across evidence — strong campaign signal"
-                        : sharedCount + " shared indicator(s) detected across evidence — possible coordinated campaign";
+            if (!genuineInfrastructureIndicators.isEmpty() || isCurrentDemo) {
+                String signalDescription;
+                if (isCurrentDemo) {
+                    signalDescription = sharedCount + " synthetic demonstration indicator(s) cross-correlated across "
+                            + (connectedInvestigations.size() + 1) + " demonstration cases (RFC 2606/5737 test fixtures)";
+                } else if (hasVerifiedMaliciousThreatHit && (genuineCrossCaseCount > 0 || genuineInfrastructureIndicators.size() >= 2)) {
+                    signalDescription = sharedCount + " shared indicator(s) confirmed malicious by threat intelligence feeds — confirmed coordinated campaign";
+                } else if (genuineCrossCaseCount >= 1 && sharedCount >= 2) {
+                    signalDescription = sharedCount + " shared indicator(s) cross-correlated across "
+                            + (genuineCrossCaseCount + 1) + " investigations — multi-case attack campaign detected";
+                } else if (genuineCrossCaseCount >= 1) {
+                    signalDescription = sharedCount + " shared indicator(s) cross-correlated across "
+                            + (genuineCrossCaseCount + 1) + " investigations — possible multi-case correlation";
+                } else {
+                    signalDescription = sharedCount >= 3
+                            ? sharedCount + " shared indicator(s) detected across evidence — strong campaign signal"
+                            : sharedCount + " shared indicator(s) detected across evidence — possible coordinated campaign";
+                }
+
+                campaignSignals.add(new CampaignSignalDto(
+                        signalDescription,
+                        classification,
+                        new ArrayList<>(allSupportingEvidenceIds),
+                        new ArrayList<>(allSupportingInvIds),
+                        connectedInvestigations.isEmpty() ? "CROSS_EVIDENCE" : "CROSS_INVESTIGATION_CAMPAIGN"
+                ));
             }
 
-            campaignSignals.add(new CampaignSignalDto(
-                    signalDescription,
-                    classification,
-                    new ArrayList<>(allSupportingEvidenceIds),
-                    new ArrayList<>(allSupportingInvIds),
-                    connectedInvestigations.isEmpty() ? "CROSS_EVIDENCE" : "CROSS_INVESTIGATION_CAMPAIGN"
-            ));
+            // Lexical overlap weak "similar language" note
+            if (!lexicalSharedIndicators.isEmpty()) {
+                Set<String> lexicalEvidenceIds = new LinkedHashSet<>();
+                lexicalSharedIndicators.forEach(si -> lexicalEvidenceIds.addAll(si.evidenceIds()));
+                campaignSignals.add(new CampaignSignalDto(
+                        "Similar language and phrasing patterns detected across evidence items ("
+                                + lexicalSharedIndicators.size() + " lexical term(s)). Lexical overlap indicates common social-engineering themes but does not establish shared attack infrastructure.",
+                        "POSSIBLE",
+                        new ArrayList<>(lexicalEvidenceIds),
+                        List.of(),
+                        "LEXICAL_SIMILARITY"
+                ));
+            }
 
             // If genuine case observed synthetic demo fixtures in workspace, add explicit isolation signal
             if (!isCurrentDemo && syntheticDossierLinkCount > 0) {
@@ -339,7 +386,8 @@ public class CampaignReconstructionService {
             }
         }
 
-        String attributionSummary = buildAttributionSummary(currentInvestigation, connectedInvestigations, sharedIndicators, classification);
+        String attributionSummary = buildAttributionSummary(currentInvestigation, connectedInvestigations,
+                sharedIndicators, genuineInfrastructureIndicators, lexicalSharedIndicators, classification);
 
         return new CampaignReconstructionResponse(
                 sharedIndicators,
@@ -350,6 +398,24 @@ public class CampaignReconstructionService {
                 connectedInvestigations.size(),
                 sharedIndicators.stream().mapToInt(SharedIndicatorDto::count).sum()
         );
+    }
+
+    public static boolean isInfrastructureType(IndicatorType type) {
+        if (type == null) return false;
+        return type == IndicatorType.URL
+                || type == IndicatorType.DOMAIN
+                || type == IndicatorType.IP_ADDRESS
+                || type == IndicatorType.EMAIL_ADDRESS;
+    }
+
+    public static boolean isLexicalType(IndicatorType type) {
+        if (type == null) return false;
+        return type == IndicatorType.URGENCY_INDICATOR
+                || type == IndicatorType.OTP_TERM
+                || type == IndicatorType.CREDENTIAL_TERM
+                || type == IndicatorType.PAYMENT_TERM
+                || type == IndicatorType.MESSAGE_SIGNAL
+                || type == IndicatorType.SUSPICIOUS_PHRASE;
     }
 
     public static boolean isSyntheticIndicator(String value) {
@@ -412,8 +478,11 @@ public class CampaignReconstructionService {
     }
 
     private String buildAttributionSummary(Investigation current, List<ConnectedInvestigationDto> connected,
-                                           List<SharedIndicatorDto> shared, String classification) {
-        if (shared.isEmpty()) {
+                                           List<SharedIndicatorDto> allShared,
+                                           List<SharedIndicatorDto> infraShared,
+                                           List<SharedIndicatorDto> lexicalShared,
+                                           String classification) {
+        if (allShared.isEmpty()) {
             return "No cross-evidence or cross-investigation indicator matches were identified. "
                     + "This incident currently exhibits isolated characteristics.";
         }
@@ -422,7 +491,7 @@ public class CampaignReconstructionService {
             sb.append("Synthetic demonstration campaign footprint detected (SYNTHETIC_DEMO_CAMPAIGN). ");
             sb.append("Correlated ").append(connected.size()).append(" demonstration case(s) [")
                     .append(String.join(", ", connected.stream().map(ConnectedInvestigationDto::title).toList()))
-                    .append("] via ").append(shared.size()).append(" shared RFC 2606 (.test) and RFC 5737 (TEST-NET) indicators. ");
+                    .append("] via ").append(allShared.size()).append(" shared RFC 2606 (.test) and RFC 5737 (TEST-NET) indicators. ");
             sb.append("Demonstration fixtures illustrate cross-case correlation mechanics and cannot produce real-world CONFIRMED threat attribution.");
             return sb.toString();
         }
@@ -441,12 +510,15 @@ public class CampaignReconstructionService {
                     .append(" other investigation(s) in your organization [")
                     .append(String.join(", ", genuineConnected.stream().map(ConnectedInvestigationDto::title).toList()))
                     .append("] through ")
-                    .append(shared.size()).append(" shared indicator(s). ");
-        } else if (!syntheticConnected.isEmpty()) {
-            sb.append("No genuine cross-case links identified. ");
+                    .append(infraShared.size()).append(" shared infrastructure indicator(s). ");
         } else {
-            sb.append("Multiple distinct evidence artifacts within this case converge on ").append(shared.size())
-                    .append(" shared infrastructure point(s). ");
+            sb.append("No genuine cross-case links identified. ");
+            if (!infraShared.isEmpty()) {
+                sb.append("Within-case evidence converges on ").append(infraShared.size())
+                        .append(" shared infrastructure point(s). ");
+            } else if (!lexicalShared.isEmpty()) {
+                sb.append("Similar language patterns were detected across evidence artifacts, but no shared infrastructure was identified. ");
+            }
         }
         sb.append("Shared infrastructure establishes relationship provenance; threat-actor attribution remains an analytical hypothesis.");
         if (!syntheticConnected.isEmpty()) {

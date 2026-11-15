@@ -23,6 +23,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -85,6 +88,11 @@ public class InvestigationReportService {
             value.put("id", item.getId());
             value.put("type", item.getEvidenceType());
             value.put("description", item.getDescription());
+            value.put("url", item.getUrl());
+            value.put("senderAddress", item.getSenderAddress());
+            value.put("subject", item.getSubject());
+            value.put("originalFilename", item.getOriginalFilename());
+            value.put("textContent", item.getTextContent());
             value.put("createdAt", item.getCreatedAt());
             value.put("indicators", indicatorRepository.findByEvidenceIdOrderByExtractedAtAsc(item.getId()).stream()
                     .map(indicator -> nullableMap(
@@ -108,6 +116,23 @@ public class InvestigationReportService {
             return value;
         }).toList();
 
+        int totalIndicators = evidenceData.stream()
+                .mapToInt(e -> ((List<?>) e.get("indicators")).size())
+                .sum();
+        String riskCat = risk != null ? risk.category().name()
+                : (investigation.getOverallRiskLevel() != null ? investigation.getOverallRiskLevel().name() : "UNKNOWN");
+        int riskScore = risk != null ? risk.score()
+                : (investigation.getRiskScore() != null ? investigation.getRiskScore().intValue() : 0);
+        String campClass = campaign != null ? campaign.campaignClassification() : "UNKNOWN";
+
+        String deterministicExecutiveSummary = String.format(
+                "Deterministic forensic baseline: %d evidence artifact(s) evaluated, yielding %d extracted indicator(s). "
+                        + "Overall heuristic risk level assessed as %s (score: %d/100). "
+                        + "Campaign reconstruction classified footprint as %s. "
+                        + "AI multi-agent reasoning was not executed; all metrics derive strictly from deterministic parsing rules, cryptographic digests, and threat intelligence feeds.",
+                evidence.size(), totalIndicators, riskCat, riskScore, campClass
+        );
+
         Map<String, Object> content = new LinkedHashMap<>();
         Map<String, Object> invMap = new LinkedHashMap<>();
         invMap.put("id", investigation.getId());
@@ -121,6 +146,7 @@ public class InvestigationReportService {
         content.put("investigation", invMap);
         content.put("evidence", evidenceData);
         content.put("riskAssessment", risk);
+        content.put("deterministicExecutiveSummary", deterministicExecutiveSummary);
         content.put("relationships", graph == null ? List.of() : graph.edges());
         content.put("campaignReconstruction", campaign);
         content.put("epistemicStandards", Map.of(
@@ -134,6 +160,12 @@ public class InvestigationReportService {
                 "AI summaries are limited to persisted structured analysis results."));
         content.put("disclaimer", "This report supports investigation and verification. It does not establish fraud as a legal conclusion.");
         content.put("generatedAt", Instant.now());
+
+        // Canonical JSON snapshot hashed with SHA-256 (64 hex characters) for cryptographic report integrity
+        String canonicalSnapshotJson = write(content);
+        String integrityDigest = computeSha256Hex(canonicalSnapshotJson);
+        content.put("integrityDigest", integrityDigest);
+
         String reportJson = write(content);
         return InvestigationReportResponse.fromEntity(reportRepository.save(
                 new InvestigationReport(investigation, reportJson, Instant.now())));
@@ -162,6 +194,27 @@ public class InvestigationReportService {
                     HttpStatus.FORBIDDEN);
         }
         return investigation;
+    }
+
+    public static String computeSha256Hex(String text) {
+        if (text == null) {
+            return "";
+        }
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(text.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
     }
 
     private String write(Object value) {

@@ -91,6 +91,51 @@ class DeterministicExtractionServiceTest {
         assertThat(savedTypes()).doesNotContain(IndicatorType.URL);
     }
 
+    @Test
+    void stripsTrailingEllipsisAndPunctuationFromUrls() {
+        evidence.setTextContent("Visit https://x.com/a... or see (https://x.com/b…), or check https://x.com/c.");
+
+        service.extractAndPersist(evidence);
+
+        List<String> urls = saved().stream()
+                .filter(i -> i.getIndicatorType() == IndicatorType.URL)
+                .map(com.phantomtrace.entity.ExtractedIndicator::getNormalizedValue)
+                .toList();
+
+        assertThat(urls).contains("https://x.com/a", "https://x.com/b", "https://x.com/c");
+        assertThat(urls).noneMatch(u -> u.endsWith(".") || u.endsWith("…") || u.endsWith(")"));
+    }
+
+    @Test
+    void dedupesIndicatorsByNormalizedValueAndTypePerEvidence() {
+        // Repeated URLs and repeated terms in single evidence
+        evidence.setTextContent("""
+                Visit https://x.com/pay and HTTPS://x.com/pay.
+                Urgent urgency urgent!
+                Transfer fee deposit fee.
+                """);
+
+        service.extractAndPersist(evidence);
+
+        // Count URLs for x.com/pay
+        long urlCount = saved().stream()
+                .filter(i -> i.getIndicatorType() == IndicatorType.URL && i.getNormalizedValue().equals("https://x.com/pay"))
+                .count();
+        assertThat(urlCount).isEqualTo(1);
+
+        // Count domain x.com
+        long domainCount = saved().stream()
+                .filter(i -> i.getIndicatorType() == IndicatorType.DOMAIN && i.getNormalizedValue().equals("x.com"))
+                .count();
+        assertThat(domainCount).isEqualTo(1);
+
+        // Count urgency indicator
+        long urgencyCount = saved().stream()
+                .filter(i -> i.getIndicatorType() == IndicatorType.URGENCY_INDICATOR && i.getNormalizedValue().equals("urgent"))
+                .count();
+        assertThat(urgencyCount).isEqualTo(1);
+    }
+
     private List<IndicatorType> savedTypes() {
         return saved().stream().map(indicator -> indicator.getIndicatorType()).toList();
     }

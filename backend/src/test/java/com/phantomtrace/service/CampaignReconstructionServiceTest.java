@@ -528,4 +528,84 @@ class CampaignReconstructionServiceTest {
         assertThat(response.connectedInvestigations().get(0).relationshipExplanation()).contains("Excluded from real-world attribution");
         assertThat(response.attributionSummary()).contains("ISOLATED_INCIDENT");
     }
+
+    @Test
+    void excludesLexicalIndicatorsFromCrossCaseCorrelationAndProbableClassification() {
+        when(securityUtils.getCurrentUserId()).thenReturn(userId);
+        when(investigationRepository.findById(investigationId)).thenReturn(Optional.of(investigation));
+
+        User user = new User("analyst@example.com", "hash", "Analyst", UserRole.ROLE_ANALYST);
+        ReflectionTestUtils.setField(user, "id", userId);
+
+        UUID secondInvId = UUID.randomUUID();
+        Investigation secondInv = new Investigation(user, "Case 2", "Context 2", InvestigationCategory.PHISHING);
+        ReflectionTestUtils.setField(secondInv, "id", secondInvId);
+        Evidence ev2 = new Evidence(secondInv, EvidenceType.EMAIL, "Email 2");
+        ReflectionTestUtils.setField(ev2, "id", UUID.randomUUID());
+
+        // Both cases share 5 lexical indicators (urgency, otp, credential, payment, message signal) but 0 infrastructure
+        ExtractedIndicator lex1a = new ExtractedIndicator(evidence1, IndicatorType.URGENCY_INDICATOR, "urgent", "urgent", "REGEX", Instant.now());
+        ExtractedIndicator lex1b = new ExtractedIndicator(ev2, IndicatorType.URGENCY_INDICATOR, "urgent", "urgent", "REGEX", Instant.now());
+
+        ExtractedIndicator lex2a = new ExtractedIndicator(evidence1, IndicatorType.OTP_TERM, "otp", "otp", "REGEX", Instant.now());
+        ExtractedIndicator lex2b = new ExtractedIndicator(ev2, IndicatorType.OTP_TERM, "otp", "otp", "REGEX", Instant.now());
+
+        ExtractedIndicator lex3a = new ExtractedIndicator(evidence1, IndicatorType.CREDENTIAL_TERM, "password", "password", "REGEX", Instant.now());
+        ExtractedIndicator lex3b = new ExtractedIndicator(ev2, IndicatorType.CREDENTIAL_TERM, "password", "password", "REGEX", Instant.now());
+
+        ExtractedIndicator lex4a = new ExtractedIndicator(evidence1, IndicatorType.PAYMENT_TERM, "fee", "fee", "REGEX", Instant.now());
+        ExtractedIndicator lex4b = new ExtractedIndicator(ev2, IndicatorType.PAYMENT_TERM, "fee", "fee", "REGEX", Instant.now());
+
+        ExtractedIndicator lex5a = new ExtractedIndicator(evidence1, IndicatorType.MESSAGE_SIGNAL, "ACCOUNT_SUSPENDED", "ACCOUNT_SUSPENDED", "REGEX", Instant.now());
+        ExtractedIndicator lex5b = new ExtractedIndicator(ev2, IndicatorType.MESSAGE_SIGNAL, "ACCOUNT_SUSPENDED", "ACCOUNT_SUSPENDED", "REGEX", Instant.now());
+
+        when(indicatorRepository.findByEvidenceInvestigationId(investigationId))
+                .thenReturn(List.of(lex1a, lex2a, lex3a, lex4a, lex5a));
+        when(indicatorRepository.findByEvidenceInvestigationUserId(userId))
+                .thenReturn(List.of(lex1a, lex1b, lex2a, lex2b, lex3a, lex3b, lex4a, lex4b, lex5a, lex5b));
+
+        CampaignReconstructionResponse response = campaignService.reconstruct(investigationId);
+
+        // Lexical indicators MUST NOT establish connected investigations
+        assertThat(response.connectedInvestigations()).isEmpty();
+
+        // Lexical indicators MUST NOT raise classification to PROBABLE or CONFIRMED; at most POSSIBLE
+        assertThat(response.campaignClassification()).isEqualTo("POSSIBLE");
+        assertThat(response.campaignClassification()).isNotEqualTo("PROBABLE");
+        assertThat(response.campaignClassification()).isNotEqualTo("CONFIRMED");
+
+        // Lexical similarity note should be present
+        assertThat(response.campaignSignals()).anyMatch(s -> s.signalType().equals("LEXICAL_SIMILARITY"));
+
+        // Attribution summary must NOT say PROBABLE or contradict
+        assertThat(response.attributionSummary()).doesNotContain("PROBABLE");
+        assertThat(response.attributionSummary()).contains("Similar language patterns were detected");
+    }
+
+    @Test
+    void attributionTextNeverPairsProbableWithNoGenuineCrossCaseLinks() {
+        when(securityUtils.getCurrentUserId()).thenReturn(userId);
+        when(investigationRepository.findById(investigationId)).thenReturn(Optional.of(investigation));
+
+        // 3 within-case shared domains across 2 evidence items, but ZERO cross-case links
+        ExtractedIndicator ind1a = new ExtractedIndicator(evidence1, IndicatorType.DOMAIN, "site1.org", "site1.org", "REGEX", Instant.now());
+        ExtractedIndicator ind1b = new ExtractedIndicator(evidence2, IndicatorType.DOMAIN, "site1.org", "site1.org", "REGEX", Instant.now());
+        ExtractedIndicator ind2a = new ExtractedIndicator(evidence1, IndicatorType.DOMAIN, "site2.org", "site2.org", "REGEX", Instant.now());
+        ExtractedIndicator ind2b = new ExtractedIndicator(evidence2, IndicatorType.DOMAIN, "site2.org", "site2.org", "REGEX", Instant.now());
+        ExtractedIndicator ind3a = new ExtractedIndicator(evidence1, IndicatorType.DOMAIN, "site3.org", "site3.org", "REGEX", Instant.now());
+        ExtractedIndicator ind3b = new ExtractedIndicator(evidence2, IndicatorType.DOMAIN, "site3.org", "site3.org", "REGEX", Instant.now());
+
+        when(indicatorRepository.findByEvidenceInvestigationId(investigationId))
+                .thenReturn(List.of(ind1a, ind1b, ind2a, ind2b, ind3a, ind3b));
+
+        CampaignReconstructionResponse response = campaignService.reconstruct(investigationId);
+
+        // With no cross-case links, classification is at most POSSIBLE, NEVER PROBABLE
+        assertThat(response.connectedInvestigations()).isEmpty();
+        assertThat(response.campaignClassification()).isEqualTo("POSSIBLE");
+        assertThat(response.attributionSummary()).doesNotContain("PROBABLE");
+        if (response.attributionSummary().contains("No genuine cross-case links identified")) {
+            assertThat(response.attributionSummary()).doesNotContain("PROBABLE");
+        }
+    }
 }

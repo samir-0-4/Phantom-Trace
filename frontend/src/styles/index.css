@@ -309,15 +309,25 @@ h1, h2, h3, h4, h5, h6 {
 /* Forensic Report Print Layout */
 @media print {
   @page {
-    margin: 12mm 16mm;
+    margin: 8mm 12mm;
     size: A4 portrait;
   }
   body {
     background: #ffffff !important;
     color: #0f172a !important;
   }
-  .no-print, nav, aside, header {
+  .no-print, nav, aside, header.no-print, .no-print * {
     display: none !important;
+  }
+  .report-page {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  /* Remove excessive vertical margins and spacing creating page-1 gap */
+  .report-page > :not([hidden]) ~ :not([hidden]),
+  article.space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 3mm !important;
   }
   .report-page, .report-page * {
     color: #0f172a !important;
@@ -325,10 +335,11 @@ h1, h2, h3, h4, h5, h6 {
     border-color: #cbd5e1 !important;
     box-shadow: none !important;
   }
-  .report-card {
-    break-inside: avoid;
+  .report-card, .shadow-card, article section, article > div, article > header, article > footer {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
     border: 1px solid #cbd5e1 !important;
-    margin-bottom: 8mm;
-    padding: 5mm !important;
+    margin-bottom: 3mm !important;
+    padding: 4mm !important;
   }
 }
