@@ -126,7 +126,7 @@ Security analysts, fraud responders, and individuals lack a unified platform tha
 2. **Deterministic Extraction First** — Extract indicators (URLs, domains, IPs, emails, phone numbers, urgency phrases, payment terms, OTP tokens) using strict RFC-compliant regex parsers without relying on non-deterministic LLMs.
 3. **External Threat Verification** — Cross-reference extracted indicators against live VirusTotal v3 and Abuse.ch URLhaus feeds with persistent database caching and explicit unavailability handling.
 4. **Multi-Agent Forensic Reasoning** — Coordinate six specialized AI agents powered by Groq (LLaMA-3.3-70B) that produce structured JSON findings tagged with confidence scores and evidence references.
-5. **Reconstruct Attack Campaigns** — Uncover shared infrastructure across multiple independent investigations to prove campaign-level threat actor activity.
+5. **Reconstruct Attack Campaigns** — Uncover shared infrastructure across multiple independent investigations to identify correlated campaign-level infrastructure patterns.
 6. **Transparent Heuristic Risk Scoring** — Calculate 0–100 risk scores with granular signal weights and independent confidence tracking.
 7. **Persisted Forensic Reporting** — Generate persisted case dossiers with epistemic badges (`VERIFIED`, `AI_INFERENCE`, `UNKNOWN`) ready for print or PDF export.
 
@@ -329,7 +329,7 @@ To enable reliable, zero-configuration demonstrations during hackathon evaluatio
   3. `[DEMO] Apex Campaign — Vishing Follow-up & Fraud Refund Lure` (Voice transcript refund lure)
 - **Shared Synthetic Infrastructure:** All 3 cases converge on the domain `secure-netbanking-verify.internal-demo.test` and server IP `198.51.100.42` (RFC 5737 TEST-NET-2).
 - **Synthetic Demo Isolation & Provenance:** All demo cases are prominently prefixed with `[DEMO]` and classified as `SYNTHETIC_DEMO_CAMPAIGN` with `SYNTHETIC DEMO` badges to ensure judges never mistake synthetic test fixtures for live production incidents. Synthetic fixtures receive zero real-world threat intelligence points.
-- **Persistent Provenance & Tenant Isolation (`V10__add_synthetic_demo_to_investigations.sql`):** Investigations track persistent `synthetic_demo` provenance at the database level with a compound index `(user_id, synthetic_demo)`. This guarantees synthetic demo artifacts can never be mixed with genuine casework.
+- **Persistent Provenance & Tenant Isolation (`V10__add_synthetic_demo_to_investigations.sql`):** Investigations track persistent `synthetic_demo` provenance at the database level with a compound index `(user_id, synthetic_demo)`. This strictly prevents synthetic demo artifacts from being mixed with genuine casework.
 - **Idempotent Reset (`DELETE /api/v1/demo/reset`):** Safely cleans up demo dossiers strictly scoped to the authenticated user and `syntheticDemo = true`, ensuring genuine user investigations are never affected or deleted.
 
 ---
