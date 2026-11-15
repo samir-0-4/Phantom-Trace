@@ -51,6 +51,12 @@ backend/uploads/
 logs/
 *.log
 
+# Video production & media assets
+*.mp4
+*.m4a
+*.aiff
+video_production/
+
 # Docker
 .docker/
 
