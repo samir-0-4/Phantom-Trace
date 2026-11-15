@@ -228,16 +228,24 @@ export const CampaignReconstructionPage = () => {
 
       {/* Connected Investigations Section */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <FolderSearch className="h-4 w-4 text-cyan-400" />
             <h3 className="font-mono text-xs uppercase tracking-wider text-slate-300">
               Cross-Investigation Campaign Dossiers ({connectedInvestigations.length})
             </h3>
           </div>
-          <span className="font-mono text-2xs text-slate-500">
-            Isolated by Tenant Boundaries
-          </span>
+          <div className="flex items-center gap-3">
+            {connectedInvestigations.length > 0 && (
+              <span className="font-mono text-2xs text-purple-400 flex items-center gap-1">
+                <Sparkles className="h-3 w-3" />
+                Haunted infrastructure detected across dossiers
+              </span>
+            )}
+            <span className="font-mono text-2xs text-slate-500">
+              Isolated by Tenant Boundaries
+            </span>
+          </div>
         </div>
 
         {connectedInvestigations.length > 0 ? (
@@ -245,7 +253,7 @@ export const CampaignReconstructionPage = () => {
             {connectedInvestigations.map((inv) => (
               <Card
                 key={inv.id}
-                className="relative flex flex-col justify-between border-white/[0.08] bg-[#0c101c]/90 p-5 shadow-lg hover:border-cyan-500/30 transition-all group"
+                className="relative flex flex-col justify-between stitched-border border-white/[0.12] bg-[#0c101c]/90 p-5 shadow-lg hover:border-cyan-500/50 transition-all group"
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">

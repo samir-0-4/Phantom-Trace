@@ -1,0 +1,17 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "extraction-privacy-review-on-save",
+      "description": "Ask the agent to review property-based tests and README privacy disclosures when extraction or synthetic indicator logic is saved.",
+      "trigger": "PostFileSave",
+      "matcher": "^backend/src/main/java/com/phantomtrace/(service/DeterministicExtractionService|util/SyntheticIndicatorDetector)\\.java$",
+      "action": {
+        "type": "agent",
+        "prompt": "Verify that the property-based tests and the README privacy disclosures still match the code changes in DeterministicExtractionService or SyntheticIndicatorDetector."
+      },
+      "timeout": 120
+    }
+  ]
+}
+

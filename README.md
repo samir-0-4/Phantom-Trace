@@ -10,20 +10,26 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
 [![Vercel Frontend](https://img.shields.io/badge/Vercel-Frontend%20Live-black.svg?logo=vercel)](https://phantomtrace04.vercel.app)
 [![Render Backend](https://img.shields.io/badge/Render-Backend%20Live-46E3B7.svg?logo=render)](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health)
-[![Backend Tests](https://img.shields.io/badge/Backend%20Tests-191%2F191%20Passing-brightgreen.svg)]()
-[![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-32%2F32%20Passing-brightgreen.svg)]()
+[![Backend Tests](https://img.shields.io/badge/Backend%20Tests-202%2F202%20Passing-brightgreen.svg)]()
+[![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-33%2F33%20Passing-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Kiroween Category](https://img.shields.io/badge/Kiroween%202026-Frankenstein-red.svg)]()
 
-> 🌐 **Live Public Deployment:**
+> 🌐 **Live Public Deployment & Documentation:**
 > - **Frontend Application (Vercel):** [https://phantomtrace04.vercel.app](https://phantomtrace04.vercel.app)
 > - **Backend REST API (Render):** [https://phantomtrace-backend-vhxt.onrender.com](https://phantomtrace-backend-vhxt.onrender.com)
-> - **Live Health Diagnostic:** [`https://phantomtrace-backend-vhxt.onrender.com/api/v1/health`](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health)
+> - **Live Health Diagnostic:** [`https://phantomtrace-backend-vhxt.onrender.com/actuator/health`](https://phantomtrace-backend-vhxt.onrender.com/actuator/health)
+> - ⚖️ **[Hackathon Judge Guide](docs/JUDGE_GUIDE.md)** — Step-by-step 5-minute evaluation, cold start guide, seed demo instructions
+> - 🤖 **[Kiro Usage Architecture](docs/KIRO_USAGE.md)** — Hooks, custom agents, steering, MCP, and PBT
+> - 🧪 **[Property-Based Testing Findings](docs/PBT_FINDINGS.md)** — 4,000+ randomized inputs, invariants, and boundary bug fixes
+> - 🔌 **[MCP Usage Guide](docs/MCP_USAGE.md)** — PostgreSQL and GitHub MCP server integration
+> - 🚀 **[Deployment Notes](docs/DEPLOYMENT_NOTES.md)** — Render PostgreSQL 30-day renewal guide and keep-alive ping schedule
 
 ---
 
 ## Demo & Screenshots
 
+<!-- TODO: replace with final YouTube URL before submission -->
 [Watch PhantomTrace Demo](YOUTUBE_VIDEO_URL)
 
 ### Interactive Evidence Relationship Graph
@@ -467,6 +473,7 @@ Open `http://localhost:5173` in your browser.
 | `GROQ_DEFAULT_MODEL` | — | `llama-3.3-70b-versatile` | Groq model identifier |
 | `VIRUSTOTAL_API_KEY` | ⚠️ | `...` | VirusTotal v3 API key |
 | `URLHAUS_API_KEY` | ⚠️ | `...` | Abuse.ch URLhaus API key |
+| `THREAT_LOOKUP_STRIP_QUERY` | — | `true` | Strip sensitive URL query strings and fragments before threat lookups |
 | `FILE_STORAGE_TYPE` | — | `local` | Storage mode (`local`) |
 | `FILE_STORAGE_UPLOAD_DIR` | — | `./uploads` | Uploaded evidence storage directory |
 
@@ -497,13 +504,13 @@ cd frontend && npm test -- --run && npm run lint && npm run build
 
 | Test Suite | Total Tests | Passed | Failed | Errors | Skipped | Status |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Backend Suite (JUnit 5 + Mockito)** | **191** | **191** | **0** | **0** | **0** | ✅ **PASSING** |
-| **Frontend Suite (Vitest + RTL)** | **32** | **32** | **0** | **0** | **0** | ✅ **PASSING** |
+| **Backend Suite (JUnit 5 + Mockito + jqwik PBT)** | **202** | **202** | **0** | **0** | **0** | ✅ **PASSING** |
+| **Frontend Suite (Vitest + RTL)** | **33** | **33** | **0** | **0** | **0** | ✅ **PASSING** |
 | **Frontend ESLint Check** | Codebase | Clean | **0** | **0** | — | ✅ **0 ERRORS / 0 WARNS** |
 | **Frontend Production Build (Vite)** | 1,727 modules | Clean | **0** | **0** | — | ✅ **BUILT IN ~1.6s** |
 
 > [!NOTE]
-> **Automated Test Isolation & Live Threat Feed Feasibility:** The 191 automated backend tests verify integration contracts, JSON schemas, threat mapping, and rate limiting using Mockito and Spring's `MockRestServiceServer`. In accordance with forensic testing integrity, automated tests do not claim live external VirusTotal or URLhaus verification based on mocked test executions. Live threat intelligence queries are executed in runtime environments when API keys are configured.
+> **Property-Based Testing & Forensic Test Isolation:** The backend suite includes 4 dedicated `jqwik` property-based testing (PBT) suites (`SecurityManagerPbt`, `SyntheticIndicatorDetectorPbt`, `DeterministicExtractionServicePbt`, `RiskAssessmentPbt`) executing 4,000+ randomized trials verifying mathematical clamping ($[0, 100]$), buffer bounds ($\le 24,000$), and RFC compliance (see [docs/PBT_FINDINGS.md](docs/PBT_FINDINGS.md)). In accordance with forensic testing integrity, automated tests do not claim live external VirusTotal or URLhaus verification based on mocked test executions; live threat lookups execute in runtime environments when API keys are configured.
 
 ---
 
@@ -513,7 +520,7 @@ cd frontend && npm test -- --run && npm run lint && npm run build
 - **Data Privacy & Third-Party Transmission Boundaries:**
   - **Local Host Processing:** Raw binary uploads (PDFs, images) are stored locally in the server's configured storage directory (`./uploads` or `/tmp`) and are **never** transmitted to Groq, VirusTotal, or URLhaus. Document parsing (Apache PDFBox), image decoding (ZXing QR reader), OCR text extraction (Tess4J), regex indicator extraction, graph correlation, and heuristic risk scoring execute entirely locally on the Spring Boot backend.
   - **Transmission to Groq (`api.groq.com`):** Only triggered on-demand when the user executes AI analysis (`POST /api/v1/evidence/{evidenceId}/analysis`). Transmits the full extracted textual representation of the evidence (SMS text, email body, subject line, sender address, email headers, PDF text extracts, or OCR screenshot transcripts bounded to 24,000 characters by `SecurityManager`) along with extracted deterministic indicators to Groq over HTTPS for LLM inference.
-  - **Transmission to VirusTotal & URLhaus:** Only triggered on-demand when the user executes threat lookups (`POST /api/v1/evidence/{evidenceId}/threat-lookups`). Transmits **only** the extracted URL string (Base64-encoded to VirusTotal; form-urlencoded to URLhaus). Neither service receives raw files, file hashes, email content, SMS text, OCR transcripts, IP addresses, or naked domain indicators.
+  - **Transmission to VirusTotal & URLhaus:** Only triggered on-demand when the user executes threat lookups (`POST /api/v1/evidence/{evidenceId}/threat-lookups`). Transmits **only** the extracted URL string (Base64-encoded to VirusTotal; form-urlencoded to URLhaus). Neither service receives raw files, file hashes, email content, SMS text, OCR transcripts, IP addresses, or naked domain indicators. By default, `THREAT_LOOKUP_STRIP_QUERY=true` strips URL query parameters (e.g. `?token=...`) and fragments prior to lookup to prevent accidental secret leakage. **Public Feed Disclosure:** URLs queried against VirusTotal's API may be indexed and visible to VirusTotal's community members and commercial cybersecurity partners.
   - **Synthetic Fixture Interception:** RFC 2606 reserved domains (`.test`, `.invalid`, `.localhost`, `.example`) and RFC 5737 TEST-NET IP ranges are intercepted and short-circuited locally by `SyntheticIndicatorDetector`; they are never transmitted to external threat intelligence providers.
 - **No File Execution:** Uploaded files (PDFs, images) are inspected solely via memory-safe parsers (PDFBox, ZXing, Tess4J). Uploaded binaries are never executed.
 - **Strict Multi-Tenant Isolation (IDOR Prevention):** All queries enforce database-level or service-level tenant checks (`currentUserId`). Cross-investigation campaign queries are strictly constrained to the authenticated tenant.
@@ -551,9 +558,10 @@ To preserve technical credibility under adversarial forensic scrutiny:
 
 ## Kiro Development Workflow
 
-PhantomTrace was architected, implemented, and verified using **[Kiro IDE](https://kiro.dev)** during the November 2026 development window. The repository preserves complete durable artifacts under `.kiro/`:
+PhantomTrace was architected, implemented, and verified using **[Kiro IDE](https://kiro.dev)** during the November 2026 development window. Complete durable artifacts are preserved under `.kiro/` and documented in detail in **[docs/KIRO_USAGE.md](docs/KIRO_USAGE.md)**:
 
 ### 1. Steering Rules (`.kiro/steering/`)
+- `kiroween-theme.md` — Frankenstein theme steering, WCAG AA contrast standards, and reduced-motion constraints.
 - `project-rules.md` — Enforces the Epistemic Truth Principle, architecture boundaries, and secret protection.
 - `architecture.md` — Complete structural blueprints.
 - `tech-stack.md` — Canonical version pinnings for Java 21, Spring Boot 3.4.2, and React 18.
@@ -572,11 +580,18 @@ Every major subsystem was developed following Kiro specifications (`requirements
 - `investigation-reports` — Persistent dossier generation and print export.
 - `auth-foundation` & `backend-foundation` — Security and data layer foundation.
 
-### 3. Hooks & Custom Agents (`.kiro/hooks/` & `.kiro/agents/`)
-- `.kiro/hooks/pre-commit-check.sh` — Blocks commits containing staged `.env` files.
-- `.kiro/hooks/backend-test.sh` — Runs backend test suites.
-- `.kiro/hooks/frontend-lint-build.sh` — Runs ESLint and Vite build validations.
+### 3. Real Agent Hooks (`.kiro/hooks/`)
+- `.kiro/hooks/backend-test-on-save.kiro.hook` — Runs `mvn test` on Spring Boot file saves.
+- `.kiro/hooks/frontend-lint-on-save.kiro.hook` — Runs ESLint on React component saves.
+- `.kiro/hooks/extraction-privacy-review-on-save.kiro.hook` — Reviews extraction updates against privacy documentation.
+- Companion shell hooks: `pre-commit-check.sh`, `backend-test.sh`, `frontend-lint-build.sh`.
+
+### 4. Custom Kiro Agents (`.kiro/agents/`)
+- `.kiro/agents/test-writer.md` — Specialized agent for property-based testing and deterministic invariant validation.
 - `.kiro/agents/threat-analyst.md` — Specialized threat analyst persona for forensic indicator validation.
+
+### 5. Model Context Protocol (MCP) (`.kiro/settings/mcp.json`)
+- Standardized MCP server configuration for PostgreSQL (`postgres`) and GitHub (`github`) with zero credentials hardcoded and strict approval controls (see [docs/MCP_USAGE.md](docs/MCP_USAGE.md)).
 
 ---
 

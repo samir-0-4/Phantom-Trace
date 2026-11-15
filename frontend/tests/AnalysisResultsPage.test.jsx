@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 vi.mock('../src/services/investigation/investigationService');
@@ -57,5 +57,34 @@ describe('AnalysisResultsPage', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('No findings returned')).toBeInTheDocument());
     expect(screen.getByRole('button', { name: /Run analysis/i })).toBeInTheDocument();
+  });
+
+  it('opens confirmation modal before running AI analysis and handles user consent', async () => {
+    evidenceService.analyze = vi.fn().mockResolvedValue([]);
+    evidenceService.lookupThreats = vi.fn().mockResolvedValue([]);
+    investigationService.assessRisk = vi.fn().mockResolvedValue({});
+
+    renderPage();
+    const runBtn = await screen.findByRole('button', { name: /Refresh analysis|Run analysis/i });
+    fireEvent.click(runBtn);
+
+    // Modal appears with exact required disclosure text
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Extracted text \(message text, email body\/headers, PDF text, OCR text\) is sent to Groq \(third-party\)/i)
+    ).toBeInTheDocument();
+
+    // Clicking Cancel closes modal without triggering analysis
+    const cancelBtn = screen.getByRole('button', { name: /Cancel/i });
+    fireEvent.click(cancelBtn);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(evidenceService.analyze).not.toHaveBeenCalled();
+
+    // Reopen and click "I understand, continue"
+    fireEvent.click(runBtn);
+    const confirmBtn = screen.getByRole('button', { name: /I understand, continue/i });
+    fireEvent.click(confirmBtn);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(evidenceService.analyze).toHaveBeenCalledWith('e1');
   });
 });

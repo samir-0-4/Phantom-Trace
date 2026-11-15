@@ -341,7 +341,7 @@ const EvidenceGraphContent = () => {
           />
         </Card>
       ) : (
-        <Card padded={false} className="overflow-hidden border-white/[0.1] shadow-2xl">
+        <Card padded={false} className="overflow-hidden border-white/[0.1] shadow-2xl fog-ambient">
           <div
             className="relative h-[min(72vh,720px)] min-h-[480px] w-full"
             data-testid="relationship-graph"

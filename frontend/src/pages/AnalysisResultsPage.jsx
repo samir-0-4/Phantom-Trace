@@ -145,6 +145,7 @@ export const AnalysisResultsPage = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [showConsentModal, setShowConsentModal] = useState(false);
 
   const load = useCallback(async () => {
     const investigation = await investigationService.getById(id);
@@ -297,7 +298,7 @@ export const AnalysisResultsPage = () => {
           </p>
         </div>
         <Button
-          onClick={runAnalysis}
+          onClick={() => setShowConsentModal(true)}
           loading={processing}
           disabled={evidence.length === 0}
           className="font-semibold shadow-lg"
@@ -528,6 +529,57 @@ export const AnalysisResultsPage = () => {
           />
         )}
       </Card>
+
+      {showConsentModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ai-disclosure-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+        >
+          <div className="relative w-full max-w-lg rounded-2xl border border-white/[0.14] bg-[#0c1220] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 id="ai-disclosure-modal-title" className="text-base font-bold text-white">
+                  External AI Analysis Disclosure
+                </h3>
+                <p className="text-xs text-slate-400">Third-Party Data Transmission Confirmation</p>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Extracted text (message text, email body/headers, PDF text, OCR text) is sent to Groq (third-party) for AI threat analysis.
+            </p>
+
+            <p className="text-2xs text-slate-400 leading-relaxed">
+              Do not proceed if your evidence contains unredacted Personally Identifiable Information (PII), confidential credentials, or legally restricted internal communications.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.08]">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowConsentModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  setShowConsentModal(false);
+                  runAnalysis();
+                }}
+              >
+                I understand, continue
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

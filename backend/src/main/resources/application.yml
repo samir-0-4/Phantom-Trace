@@ -37,6 +37,7 @@ phantomtrace:
       api-key: ${URLHAUS_API_KEY:}
       base-url: https://urlhaus-api.abuse.ch/v1
     cache-ttl: ${THREAT_INTEL_CACHE_TTL:PT1H}
+    strip-query: ${THREAT_LOOKUP_STRIP_QUERY:true}
   risk:
     verified-malicious-weight: ${RISK_VERIFIED_MALICIOUS_WEIGHT:40}
     credential-otp-weight: ${RISK_CREDENTIAL_OTP_WEIGHT:25}

@@ -5,8 +5,8 @@ import {
   PlusCircle,
   FileText,
   Settings,
-  ShieldCheck,
 } from 'lucide-react';
+import { PhantomIcon } from '../ui/PhantomIcon';
 import { cn } from '../../utils/cn';
 
 const NAV = [
@@ -20,15 +20,15 @@ const NAV = [
 export const Sidebar = ({ onNavigate }) => (
   <div className="flex h-full flex-col bg-[#070b14] select-none">
     <div className="flex items-center gap-3 px-6 h-18 border-b border-white/[0.08] shrink-0">
-      <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-cyan-400/30 text-cyan-300 flex items-center justify-center shadow-[0_0_16px_rgba(0,201,200,0.2)]">
-        <ShieldCheck className="w-5 h-5" />
+      <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500/20 via-cyan-500/20 to-violet-500/20 border border-emerald-400/40 text-emerald-300 flex items-center justify-center shadow-[0_0_16px_rgba(16,185,129,0.25)]">
+        <PhantomIcon className="w-5 h-5 text-emerald-300" />
       </div>
       <div>
         <span className="font-extrabold tracking-tight text-white text-base">
-          Phantom<span className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">Trace</span>
+          Phantom<span className="bg-gradient-to-r from-emerald-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent">Trace</span>
         </span>
-        <span className="block text-[9px] uppercase tracking-widest text-slate-400 font-semibold font-mono">
-          Security Forensics
+        <span className="block text-[9px] uppercase tracking-widest text-emerald-400/80 font-semibold font-mono">
+          Frankenstein Forensics
         </span>
       </div>
     </div>

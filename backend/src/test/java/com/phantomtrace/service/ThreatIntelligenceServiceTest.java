@@ -113,4 +113,38 @@ class ThreatIntelligenceServiceTest {
         assertThat(virusTotal.lookup("https://example.test").lookupStatus()).isEqualTo("UNAVAILABLE");
         assertThat(urlhaus.lookup("https://example.test").threatStatus()).isEqualTo("UNAVAILABLE");
     }
+
+    @Test
+    void stripsQueryParamsAndFragmentsFromExternalThreatQueries() {
+        UUID evidenceId = UUID.randomUUID();
+        User user = new User("owner@example.com", "hash", "Owner", UserRole.ROLE_ANALYST);
+        Investigation investigation = new Investigation(user, "Case", "Context", InvestigationCategory.PHISHING);
+        Evidence evidence = new Evidence(investigation, EvidenceType.TEXT_MESSAGE, null);
+        ReflectionTestUtils.setField(evidence, "id", evidenceId);
+
+        ExtractedIndicator indicator = new ExtractedIndicator(evidence, IndicatorType.URL,
+                "https://malicious-lure.org/login?session=SECRET_TOKEN_123#step2",
+                "https://malicious-lure.org/login?session=SECRET_TOKEN_123#step2",
+                "test", java.time.Instant.now());
+        ReflectionTestUtils.setField(indicator, "id", UUID.randomUUID());
+
+        when(indicatorRepository.findByEvidenceIdAndIndicatorType(evidenceId, IndicatorType.URL))
+                .thenReturn(List.of(indicator));
+        when(lookupRepository.findByIndicatorIdAndLookupTimestampAfter(any(), any())).thenReturn(List.of());
+        when(lookupRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(virusTotalClient.lookup(any())).thenReturn(new VirusTotalClient.ProviderLookup(
+                "https://malicious-lure.org/login", "COMPLETED", "MALICIOUS", "{}", "vt-id", null));
+        when(urlhausClient.lookup(any())).thenReturn(new UrlhausClient.ProviderLookup(
+                "https://malicious-lure.org/login", "COMPLETED", "MALICIOUS", "{}", "uh-id", null));
+
+        ThreatIntelligenceService service = new ThreatIntelligenceService(indicatorRepository, lookupRepository,
+                virusTotalClient, urlhausClient, Duration.ofHours(1), true);
+
+        service.lookupEvidence(evidenceId);
+
+        // Verify that query parameters and fragments were stripped before transmission
+        verify(virusTotalClient).lookup("https://malicious-lure.org/login");
+        verify(urlhausClient).lookup("https://malicious-lure.org/login");
+    }
 }

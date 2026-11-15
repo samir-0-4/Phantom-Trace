@@ -70,7 +70,7 @@ public class RiskAssessmentService {
         List<Evidence> evidence = evidenceRepository.findByInvestigationIdOrderByCreatedAtDesc(investigationId);
         List<ExtractedIndicator> indicators = extractedRepository.findByEvidenceInvestigationId(investigationId);
         List<Signal> signals = signals(investigationId, indicators);
-        int score = Math.min(100, signals.stream().mapToInt(Signal::weight).sum());
+        int score = Math.max(0, Math.min(100, signals.stream().mapToInt(Signal::weight).sum()));
         double confidence = confidence(evidence, indicators);
         RiskCategory category = evidence.isEmpty() || indicators.isEmpty()
                 ? RiskCategory.INCONCLUSIVE : category(score);

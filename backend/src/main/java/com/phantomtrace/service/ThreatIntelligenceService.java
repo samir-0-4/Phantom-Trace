@@ -11,6 +11,7 @@ import com.phantomtrace.integration.virustotal.VirusTotalClient;
 import com.phantomtrace.repository.ExtractedIndicatorRepository;
 import com.phantomtrace.repository.ThreatLookupRepository;
 import com.phantomtrace.util.SyntheticIndicatorDetector;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,16 +30,27 @@ public class ThreatIntelligenceService {
     private final VirusTotalClient virusTotalClient;
     private final UrlhausClient urlhausClient;
     private final Duration cacheTtl;
+    private final boolean stripQuery;
 
+    @Autowired
     public ThreatIntelligenceService(ExtractedIndicatorRepository indicatorRepository,
             ThreatLookupRepository lookupRepository, VirusTotalClient virusTotalClient,
             UrlhausClient urlhausClient,
-            @Value("${phantomtrace.threat-intel.cache-ttl:PT1H}") Duration cacheTtl) {
+            @Value("${phantomtrace.threat-intel.cache-ttl:PT1H}") Duration cacheTtl,
+            @Value("${phantomtrace.threat-intel.strip-query:true}") boolean stripQuery) {
         this.indicatorRepository = indicatorRepository;
         this.lookupRepository = lookupRepository;
         this.virusTotalClient = virusTotalClient;
         this.urlhausClient = urlhausClient;
         this.cacheTtl = cacheTtl;
+        this.stripQuery = stripQuery;
+    }
+
+    public ThreatIntelligenceService(ExtractedIndicatorRepository indicatorRepository,
+            ThreatLookupRepository lookupRepository, VirusTotalClient virusTotalClient,
+            UrlhausClient urlhausClient,
+            Duration cacheTtl) {
+        this(indicatorRepository, lookupRepository, virusTotalClient, urlhausClient, cacheTtl, true);
     }
 
     public List<ThreatLookupResponse> lookupEvidence(UUID evidenceId) {
@@ -69,18 +81,38 @@ public class ThreatIntelligenceService {
                 continue;
             }
 
+            String vtTarget = sanitizeUrlForLookup(indicator.getNormalizedValue());
+            String uhTarget = sanitizeUrlForLookup(indicator.getOriginalValue());
+
             results.add(lookup("VirusTotal", indicator, () -> {
-                var vt = virusTotalClient.lookup(indicator.getNormalizedValue());
+                var vt = virusTotalClient.lookup(vtTarget);
                 return new ProviderResult(vt.indicator(), vt.lookupStatus(), vt.threatStatus(),
                         vt.details(), vt.reference(), vt.error());
             }));
             results.add(lookup("URLhaus", indicator, () -> {
-                var uh = urlhausClient.lookup(indicator.getOriginalValue());
+                var uh = urlhausClient.lookup(uhTarget);
                 return new ProviderResult(uh.indicator(), uh.lookupStatus(), uh.threatStatus(),
                         uh.details(), uh.reference(), uh.error());
             }));
         }
         return results;
+    }
+
+    private String sanitizeUrlForLookup(String url) {
+        if (!stripQuery || url == null) {
+            return url;
+        }
+        int queryIdx = url.indexOf('?');
+        int fragIdx = url.indexOf('#');
+        int cutIdx = -1;
+        if (queryIdx >= 0 && fragIdx >= 0) {
+            cutIdx = Math.min(queryIdx, fragIdx);
+        } else if (queryIdx >= 0) {
+            cutIdx = queryIdx;
+        } else if (fragIdx >= 0) {
+            cutIdx = fragIdx;
+        }
+        return cutIdx >= 0 ? url.substring(0, cutIdx) : url;
     }
 
     @Transactional(readOnly = true)

@@ -1,0 +1,17 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "frontend-lint-on-save",
+      "description": "Run ESLint when a frontend JavaScript or JSX file is saved.",
+      "trigger": "PostFileSave",
+      "matcher": "^frontend/src/.*\\.(js|jsx)$",
+      "action": {
+        "type": "command",
+        "command": "cd frontend && npm run lint"
+      },
+      "timeout": 60
+    }
+  ]
+}
+

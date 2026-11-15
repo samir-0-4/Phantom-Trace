@@ -1,0 +1,17 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "backend-test-on-save",
+      "description": "Run backend unit and property-based test suites when Java source files are modified.",
+      "trigger": "PostFileSave",
+      "matcher": "^backend/src/.*\\.java$",
+      "action": {
+        "type": "command",
+        "command": "cd backend && mvn test"
+      },
+      "timeout": 300
+    }
+  ]
+}
+
