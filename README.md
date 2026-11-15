@@ -32,8 +32,52 @@
 <!-- TODO: replace with final YouTube URL before submission -->
 [Watch PhantomTrace Demo](YOUTUBE_VIDEO_URL)
 
-### Interactive Evidence Relationship Graph
-![PhantomTrace Campaign Reconstruction Graph](docs/images/campaign-reconstruction.png)
+### Application Gallery (Live Captures)
+
+#### 1. Cross-Investigation Campaign Reconstruction
+![Campaign Reconstruction](docs/images/campaign-reconstruction.png)
+*Identifies shared C2 domain and IP infrastructure across independent cases, classifying the coordinated attack as a synthetic demo campaign.*
+
+#### 2. Interactive Evidence Relationship Graph
+![Evidence Relationship Graph](docs/images/evidence-graph.png)
+*Hierarchical DAG layout mapping the investigation dossier to evidence artifacts and extracted indicators with semantic, color-coded relationships.*
+
+#### 3. Evidence Graph Entity Provenance Detail
+![Evidence Graph Node Detail](docs/images/evidence-graph-node-detail.png)
+*Side panel displaying granular provenance, extraction source, confidence, and epistemic verification status for selected indicators.*
+
+#### 4. Security Operations Dashboard
+![Dashboard Overview](docs/images/dashboard-overview.png)
+*Real-time multi-tenant intelligence overview tracking active cases, risk severity distributions, and cross-case indicators.*
+
+#### 5. Transparent Risk Assessment & Scoring Matrix
+![Risk Assessment](docs/images/risk-assessment.png)
+*Itemized signal contributions with transparent point weights and explicit indicators of unqueried or unconfigured intelligence feeds.*
+
+#### 6. Multi-Channel Evidence & Indicator Workspace
+![Evidence Indicators](docs/images/evidence-indicators.png)
+*Submitted evidence items with RFC-compliant indicator extraction and external threat intelligence verification results.*
+
+#### 7. Privacy-First AI Consent & Disclosure Modal
+![AI Consent Modal](docs/images/ai-consent-modal.png)
+*Explicit data transmission warning informing investigators before raw extracted text is dispatched to external LLMs.*
+
+#### 8. Court-Ready Forensic Dossier & Audit Report
+![Forensic Report](docs/images/forensic-report.png)
+*Persisted tamper-evident case report adhering to strict Epistemic Truth standards (VERIFIED, AI_INFERENCE, UNKNOWN) with print layout.*
+
+### Architecture & Multi-Agent Diagrams
+
+#### System Architecture Overview
+![System Architecture Diagram](docs/images/architecture.png)
+*Generated architectural diagram showing the decoupled Spring Boot 3.4 core, React 18 client, and external intelligence integrations.*
+
+#### Six-Agent Forensic Reasoning Pipeline
+![Six-Agent Flow Diagram](docs/images/agents-flow.png)
+*Generated workflow diagram detailing the concurrent analysis pipeline across the six specialized detective agents.*
+
+> [!NOTE]
+> **Synthetic Demonstration Data:** All investigation records and indicators depicted in these captures are safe, simulated demonstration fixtures utilizing RFC 2606 reserved domains (`.test`) and RFC 5737 documentation IP ranges (`TEST-NET-2`). No real-world infrastructure or personally identifiable information is referenced.
 
 ---
 
