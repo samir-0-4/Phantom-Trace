@@ -15,11 +15,13 @@ import {
   Mail,
   Paperclip,
   Clock,
+  CheckCircle,
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { StatusBadge, RiskBadge, CategoryBadge } from '../components/ui/StatusBadge';
 import { FullPageSpinner, Spinner } from '../components/ui/Spinner';
+import { useToast } from '../components/ui/Toast';
 import { getApiErrorMessage } from '../services/api/apiClient';
 import evidenceService from '../services/evidence/evidenceService';
 import { investigationService } from '../services/investigation/investigationService';
@@ -36,6 +38,7 @@ const evidenceIcons = {
 export const InvestigationDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [investigation, setInvestigation] = useState(null);
   const [evidence, setEvidence] = useState([]);
   const [evidenceLoading, setEvidenceLoading] = useState(true);
@@ -43,6 +46,27 @@ export const InvestigationDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const handleStatusChange = async (newStatus) => {
+    if (!newStatus || !investigation || newStatus === investigation.status) return;
+    setUpdatingStatus(true);
+    try {
+      const updated = await investigationService.update(investigation.id, { status: newStatus });
+      setInvestigation((prev) => ({
+        ...prev,
+        status: updated?.status || newStatus,
+        completedAt:
+          updated?.completedAt ||
+          (newStatus === 'COMPLETED' ? new Date().toISOString() : prev?.completedAt),
+      }));
+      toast.success(`Case status updated to ${newStatus}`);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Failed to update case status'));
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -153,6 +177,19 @@ export const InvestigationDetailsPage = () => {
               <span>Report</span>
             </Button>
           </Link>
+          {inv.status !== 'COMPLETED' && (
+            <Button
+              variant="outline"
+              size="sm"
+              loading={updatingStatus}
+              onClick={() => handleStatusChange('COMPLETED')}
+              className="inline-flex items-center gap-1.5 font-semibold text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
+              title="Mark investigation as completed"
+            >
+              <CheckCircle className="w-4 h-4 text-emerald-400" />
+              <span>Mark Complete</span>
+            </Button>
+          )}
           <Button
             variant="danger"
             size="sm"
@@ -272,8 +309,20 @@ export const InvestigationDetailsPage = () => {
 
               <div className="flex justify-between items-center gap-2 py-2 border-b border-white/[0.06]">
                 <dt className="text-slate-400 font-medium">Status</dt>
-                <dd>
-                  <StatusBadge status={inv.status} />
+                <dd className="flex items-center gap-2">
+                  <select
+                    value={inv.status}
+                    onChange={(e) => handleStatusChange(e.target.value)}
+                    disabled={updatingStatus}
+                    aria-label="Update investigation status"
+                    className="bg-slate-900 border border-slate-700/80 text-xs rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-cyan-500 font-mono cursor-pointer"
+                  >
+                    <option value="DRAFT">DRAFT</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="PROCESSING">PROCESSING</option>
+                    <option value="COMPLETED">COMPLETED</option>
+                  </select>
+                  {updatingStatus && <Spinner className="w-3.5 h-3.5 text-cyan-400" />}
                 </dd>
               </div>
 
