@@ -148,6 +148,7 @@ public class RiskAssessmentService {
                 case PAYMENT_TERM, MESSAGE_SIGNAL -> {
                     if (lowerVal.contains("pay") || lowerVal.contains("payment") || lowerVal.contains("fee")
                             || lowerVal.contains("transfer") || lowerVal.contains("deposit")
+                            || lowerVal.contains("refund")
                             || lowerVal.contains("registration_fee") || lowerVal.contains("processing_fee")) {
                         add(unique, "PAYMENT", "Payment / Wire / Fee Request",
                                 properties.getUpfrontPaymentWeight(), ref,
@@ -194,7 +195,8 @@ public class RiskAssessmentService {
     private boolean unusualUrl(String value) {
         String lower = value.toLowerCase(Locale.ROOT);
         return lower.matches("https?://\\d{1,3}(?:\\.\\d{1,3}){3}.*")
-                || lower.contains("xn--") || lower.matches(".*https?://[^/]+/(login|verify|payment|secure).*");
+                || lower.contains("xn--")
+                || lower.matches(".*https?://[^/]+/(login|verify|payment|secure|refund|kyc|portal|auth|account|update|claim).*");
     }
 
     private double confidence(List<Evidence> evidence, List<ExtractedIndicator> indicators,

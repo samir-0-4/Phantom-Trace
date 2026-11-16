@@ -217,6 +217,21 @@ public class DemoDatasetService {
                 "DETERMINISTIC_EMAIL_EXTRACTOR", now.minus(1, ChronoUnit.HOURS));
         indicatorRepository.save(ind2Email);
 
+        ExtractedIndicator ind2Credential = new ExtractedIndicator(ev2, IndicatorType.CREDENTIAL_TERM,
+                "kyc disclosures", "kyc disclosures",
+                "DETERMINISTIC_LEXICAL_EXTRACTOR", now.minus(1, ChronoUnit.HOURS));
+        indicatorRepository.save(ind2Credential);
+
+        ExtractedIndicator ind2Urgency = new ExtractedIndicator(ev2, IndicatorType.URGENCY_INDICATOR,
+                "within 24 hours", "within 24 hours",
+                "DETERMINISTIC_LEXICAL_EXTRACTOR", now.minus(1, ChronoUnit.HOURS));
+        indicatorRepository.save(ind2Urgency);
+
+        ExtractedIndicator ind2Signal = new ExtractedIndicator(ev2, IndicatorType.MESSAGE_SIGNAL,
+                "impersonation", "impersonation",
+                "DETERMINISTIC_LEXICAL_EXTRACTOR", now.minus(1, ChronoUnit.HOURS));
+        indicatorRepository.save(ind2Signal);
+
         // Threat Lookup for Case 2 (RFC 2606 Synthetic Demo Fixture - marked UNKNOWN with SYNTHETIC_TEST_INDICATOR)
         ThreatLookup lookup2 = new ThreatLookup(
                 ind2Domain,
@@ -287,6 +302,21 @@ public class DemoDatasetService {
                 sharedIp, sharedIp,
                 "DETERMINISTIC_IP_EXTRACTOR", now.minus(30, ChronoUnit.MINUTES));
         ind3Ip = indicatorRepository.save(ind3Ip);
+
+        ExtractedIndicator ind3Payment = new ExtractedIndicator(ev3, IndicatorType.PAYMENT_TERM,
+                "payment", "payment",
+                "DETERMINISTIC_LEXICAL_EXTRACTOR", now.minus(30, ChronoUnit.MINUTES));
+        indicatorRepository.save(ind3Payment);
+
+        ExtractedIndicator ind3Urgency = new ExtractedIndicator(ev3, IndicatorType.URGENCY_INDICATOR,
+                "unauthorized transaction", "unauthorized",
+                "DETERMINISTIC_LEXICAL_EXTRACTOR", now.minus(30, ChronoUnit.MINUTES));
+        indicatorRepository.save(ind3Urgency);
+
+        ExtractedIndicator ind3Signal = new ExtractedIndicator(ev3, IndicatorType.MESSAGE_SIGNAL,
+                "impersonation", "impersonation",
+                "DETERMINISTIC_LEXICAL_EXTRACTOR", now.minus(30, ChronoUnit.MINUTES));
+        indicatorRepository.save(ind3Signal);
 
         RiskAssessment risk3 = new RiskAssessment(
                 case3,

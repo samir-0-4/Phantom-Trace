@@ -237,6 +237,25 @@ class RiskAssessmentServiceTest {
         assertThat(result.missingInformation()).contains("Forensic AI agent analysis has not been executed");
     }
 
+    @Test
+    void calculatesRefundAndKycBankingScamSignalsAccurately() {
+        Evidence ev = evidence("Support Ticket #7821: Unauthorized transaction detected. Reply with payment to claim refund. Portal: https://auth-sec-check.test/refund");
+        ExtractedIndicator url = indicator(ev, IndicatorType.URL, "https://auth-sec-check.test/refund");
+        ExtractedIndicator pay = indicator(ev, IndicatorType.PAYMENT_TERM, "payment");
+        ExtractedIndicator urg = indicator(ev, IndicatorType.URGENCY_INDICATOR, "unauthorized transaction");
+        ExtractedIndicator imp = indicator(ev, IndicatorType.MESSAGE_SIGNAL, "impersonation");
+
+        when(evidenceRepository.findByInvestigationIdOrderByCreatedAtDesc(investigationId)).thenReturn(List.of(ev));
+        when(extractedRepository.findByEvidenceInvestigationId(investigationId)).thenReturn(List.of(url, pay, urg, imp));
+
+        var result = service.assess(investigationId);
+
+        // UNUSUAL_URL (10) + PAYMENT (20) + URGENCY (10) + IMPERSONATION (15) = 55
+        assertThat(result.score()).isEqualTo(55);
+        assertThat(result.category()).isEqualTo(RiskCategory.HIGH);
+        assertThat(result.contributingSignals()).hasSize(4);
+    }
+
     private Evidence evidence(String text) {
         Evidence value = new Evidence(investigation, EvidenceType.TEXT_MESSAGE, null);
         ReflectionTestUtils.setField(value, "id", UUID.randomUUID());
