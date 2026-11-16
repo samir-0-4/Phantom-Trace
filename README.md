@@ -485,11 +485,12 @@ mvn spring-boot:run
 ```
 The backend initializes on `http://localhost:8080`. Flyway automatically executes database migrations V1 through V10 (including `V10__add_synthetic_demo_to_investigations.sql` for persistent synthetic demo isolation).
 
-*Verify health check:*
+*Verify live health check (Production API):*
 ```bash
-curl http://localhost:8080/api/v1/health
-# {"status":"UP","application":"PhantomTrace","dbConnected":true,"groqConfigured":false,"virusTotalConfigured":false,"urlhausConfigured":false}
+curl https://phantomtrace-backend-vhxt.onrender.com/api/v1/health
+# {"status":"UP","application":"PhantomTrace","dbConnected":true,"groqConfigured":true,"virusTotalConfigured":true,"urlhausConfigured":true}
 ```
+*(For local development builds, query `http://localhost:8080/api/v1/health` instead).*
 
 ### 5. Start the Frontend Application
 ```bash
