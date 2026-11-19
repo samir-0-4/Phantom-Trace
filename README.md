@@ -18,7 +18,7 @@
 > 🌐 **Live Public Deployment & Documentation:**
 > - **Frontend Application (Vercel):** [https://phantomtrace04.vercel.app](https://phantomtrace04.vercel.app)
 > - **Backend REST API (Render):** [https://phantomtrace-backend-vhxt.onrender.com](https://phantomtrace-backend-vhxt.onrender.com)
-> - **Live Health Diagnostic:** [`https://phantomtrace-backend-vhxt.onrender.com/actuator/health`](https://phantomtrace-backend-vhxt.onrender.com/actuator/health)
+> - **Live Health Diagnostic:** [`https://phantomtrace-backend-vhxt.onrender.com/api/v1/health`](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health)
 > - ⚖️ **[Hackathon Judge Guide](docs/JUDGE_GUIDE.md)** — Step-by-step 5-minute evaluation, cold start guide, seed demo instructions
 > - 🤖 **[Kiro Usage Architecture](docs/KIRO_USAGE.md)** — Hooks, custom agents, steering, MCP, and PBT
 > - 🧪 **[Property-Based Testing Findings](docs/PBT_FINDINGS.md)** — 4,000+ randomized inputs, invariants, and boundary bug fixes

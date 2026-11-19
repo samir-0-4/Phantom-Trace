@@ -9,6 +9,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.security.SecureRandom;
+import java.util.Base64;
+
 import com.phantomtrace.entity.User;
 import com.phantomtrace.enums.UserRole;
 import com.phantomtrace.repository.UserRepository;
@@ -26,6 +29,7 @@ public class DemoUserSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DemoUserSeeder.class);
     private static final String DEMO_EMAIL = "analyst@phantomtrace.local";
+    private static final String PLACEHOLDER = "change_me_to_a_secure_password";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -33,7 +37,7 @@ public class DemoUserSeeder implements CommandLineRunner {
 
     public DemoUserSeeder(UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
-                          @Value("${phantomtrace.demo.seed-password:PhantomTrace2026!}") String seededPassword) {
+                          @Value("${phantomtrace.demo.seed-password:}") String seededPassword) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.seededPassword = seededPassword;
@@ -45,14 +49,26 @@ public class DemoUserSeeder implements CommandLineRunner {
             log.debug("Demo seed skipped: users already present.");
             return;
         }
-        // Credentials come from configuration, never hardcoded in logic.
+
+        String effectivePassword = resolvePassword();
         User user = new User(
                 DEMO_EMAIL,
-                passwordEncoder.encode(seededPassword),
+                passwordEncoder.encode(effectivePassword),
                 "PhantomTrace Analyst",
                 UserRole.ROLE_ANALYST
         );
         userRepository.save(user);
         log.info("Demo analyst account seeded: {}", DEMO_EMAIL);
+    }
+
+    private String resolvePassword() {
+        if (seededPassword == null || seededPassword.isBlank() || PLACEHOLDER.equalsIgnoreCase(seededPassword.trim())) {
+            byte[] randomBytes = new byte[12];
+            new SecureRandom().nextBytes(randomBytes);
+            String generated = "Pt-" + Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes) + "!9";
+            log.info("No fixed demo password configured. Generated secure random credential for {}: {}", DEMO_EMAIL, generated);
+            return generated;
+        }
+        return seededPassword;
     }
 }

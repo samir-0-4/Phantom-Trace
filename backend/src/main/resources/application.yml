@@ -52,4 +52,4 @@ phantomtrace:
     max-file-size-bytes: ${FILE_STORAGE_MAX_FILE_SIZE_BYTES:26214400}
   demo:
     seed-enabled: ${PHANTOMTRACE_DEMO_SEED_ENABLED:false}
-    seed-password: ${PHANTOMTRACE_DEMO_SEED_PASSWORD:PhantomTrace2026!}
+    seed-password: ${PHANTOMTRACE_DEMO_SEED_PASSWORD:}

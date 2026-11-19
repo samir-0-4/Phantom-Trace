@@ -50,17 +50,17 @@ To ensure hackathon judges experience instant response times without cold starts
    - [UptimeRobot](https://uptimerobot.com) (free 5-minute HTTP checks)
    - [Cron-Job.org](https://cron-job.org) (free scheduled HTTP requests)
    - [Better Uptime](https://betterstack.com)
-2. **Ping Target URL:**
+2. **Ping Target URL (Canonical Health Endpoint):**
    ```http
-   GET https://phantomtrace-backend-vhxt.onrender.com/actuator/health
+   GET https://phantomtrace-backend-vhxt.onrender.com/api/v1/health
    ```
 3. **Recommended Schedule:**
    - Interval: Every **10 minutes**
    - HTTP Method: `GET`
    - Expected Status: `200 OK`
-   - Response Body: `{"status":"UP"}`
+   - Response Body: `{"status":"UP","application":"PhantomTrace",...}`
 
-Pinging `/actuator/health` every 10 minutes keeps the Render container warm continuously throughout the evaluation period.
+Pinging `/api/v1/health` (or the bridged `/actuator/health`) every 10 minutes keeps the Render container warm continuously throughout the evaluation period.
 
 ---
 
@@ -81,10 +81,10 @@ The production deployment incorporates defense-in-depth privacy controls:
 
 To test backend health directly from a terminal:
 ```bash
-# Verify API Health and Database Connection
-curl -i https://phantomtrace-backend-vhxt.onrender.com/actuator/health
-
-# Verify Root Health Ping
+# Verify Canonical API Health and Database Connection
 curl -i https://phantomtrace-backend-vhxt.onrender.com/api/v1/health
+
+# Verify Actuator Compatibility Bridge
+curl -i https://phantomtrace-backend-vhxt.onrender.com/actuator/health
 ```
 

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phantomtrace.ai.config.AIProviderConfig;
 import com.phantomtrace.ai.dto.AiCompletionRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -15,6 +17,8 @@ import java.net.SocketTimeoutException;
 
 @Component
 public class GroqAiProvider implements AiProvider {
+    private static final Logger log = LoggerFactory.getLogger(GroqAiProvider.class);
+
     private final RestClient client;
     private final ObjectMapper objectMapper;
     private final AIProviderConfig config;
@@ -65,8 +69,9 @@ public class GroqAiProvider implements AiProvider {
                 }
                 return failure(AiProviderResult.Status.UNAVAILABLE, "AI provider is unavailable: " + ex.getMessage());
             } catch (RestClientResponseException ex) {
+                log.warn("Groq API returned HTTP {}: {}", ex.getStatusCode(), ex.getResponseBodyAsString());
                 if (ex.getStatusCode().value() == 401 || ex.getStatusCode().value() == 403) {
-                    return failure(AiProviderResult.Status.AUTHENTICATION_ERROR, "AI provider credentials were rejected");
+                    return failure(AiProviderResult.Status.AUTHENTICATION_ERROR, "AI provider credentials were rejected: " + ex.getStatusText());
                 }
                 if (ex.getStatusCode().value() == 429 && attempt == 0) {
                     continue;
@@ -74,9 +79,10 @@ public class GroqAiProvider implements AiProvider {
                 if (ex.getStatusCode().value() == 429) {
                     return failure(AiProviderResult.Status.RATE_LIMITED, "AI provider rate limit reached");
                 }
-                return failure(AiProviderResult.Status.ERROR, "AI provider request failed");
+                return failure(AiProviderResult.Status.ERROR, "AI provider request failed (HTTP " + ex.getStatusCode().value() + ")");
             } catch (RuntimeException ex) {
-                return failure(AiProviderResult.Status.ERROR, "AI provider request failed");
+                log.warn("Groq request failed: {}", ex.getMessage());
+                return failure(AiProviderResult.Status.ERROR, "AI provider request failed: " + ex.getMessage());
             }
         }
         return failure(AiProviderResult.Status.RATE_LIMITED, "AI provider rate limit reached");

@@ -11,7 +11,7 @@ Welcome, judges! This guide provides everything you need to evaluate **PhantomTr
 | :--- | :--- | :--- |
 | **Frontend Application** | [https://phantomtrace04.vercel.app](https://phantomtrace04.vercel.app) | Deployed on Vercel Edge CDN |
 | **Backend API** | [https://phantomtrace-backend-vhxt.onrender.com](https://phantomtrace-backend-vhxt.onrender.com) | Spring Boot 3.4 on Render |
-| **API Health Check** | [https://phantomtrace-backend-vhxt.onrender.com/actuator/health](https://phantomtrace-backend-vhxt.onrender.com/actuator/health) | Uptime & database health |
+| **API Health Check** | [https://phantomtrace-backend-vhxt.onrender.com/api/v1/health](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health) | Canonical uptime, database & integration diagnostic |
 | **GitHub Repository** | [https://github.com/samir-0-4/Phantom-Trace.git](https://github.com/samir-0-4/Phantom-Trace.git) | Branch: `main` |
 
 > [!NOTE]
@@ -29,10 +29,14 @@ Welcome, judges! This guide provides everything you need to evaluate **PhantomTr
 To immediately see PhantomTrace's cross-case campaign correlation and entity resolution in action without manually typing dozens of phishing items:
 1. Navigate to **Campaign Reconstruction** from the sidebar or click **Seed Demo Campaign**.
 2. Alternatively, open any investigation and click **Seed Synthetic Campaign**.
-3. This creates two interconnected cases simulating a coordinated campaign:
-   - **Apex Holdings Executive Phishing** (Email spearphishing lure with malicious credential-harvesting subdomains)
-   - **Phantom Financial SMS Smishing** (Urgent SMS notification linking to the same underlying C2 infrastructure)
-4. Notice how PhantomTrace automatically discovers the shared infrastructure across cases and flags it with **SYNTHETIC DEMO CAMPAIGN** (using RFC 2606 `.test` and RFC 5737 `TEST-NET` safe test indicators).
+3. This creates three interconnected cases simulating a coordinated multi-vector campaign (Apex Banking Fraud Campaign):
+   - **Apex Campaign — SMS Banking Alert & Account Suspension** (Urgent SMS credential/OTP harvest referencing IP `198.51.100.42` and login portal)
+   - **Apex Campaign — Spear-Phishing Email & KYC Lure** (Targeted corporate email lure requesting mandatory annual KYC disclosure on identical host)
+   - **Apex Campaign — Vishing Follow-up & Fraud Refund Lure** (SMS follow-up to support call soliciting transaction references for unauthorized charge reversal)
+4. Notice how PhantomTrace automatically correlates shared infrastructure across all three cases:
+   - Shared Domain: `secure-netbanking-verify.internal-demo.test` (RFC 2606 test domain, shared across all 3 cases)
+   - Shared Host IP: `198.51.100.42` (RFC 5737 TEST-NET-2 address, shared between Case 1 and Case 3)
+   - Reconstructed Campaign Graph: Links all 3 cases, evidence items, and IOCs while safely flagging them as `SYNTHETIC DEMO CAMPAIGN` fixtures (never polluting external threat intelligence feeds).
 
 ### Step 3: Inspect the Interactive Evidence Relationship Graph
 1. Navigate to the **Evidence Graph** tab for either case.
@@ -59,7 +63,7 @@ To immediately see PhantomTrace's cross-case campaign correlation and entity res
 4. **Deterministic Extraction:** Watch the system immediately extract IPs, domains, URLs, and BTC wallet addresses locally without any AI calls. Indicators are tagged with epistemic status `VERIFIED` and a tamper-evident SHA-256 payload hash.
 5. **AI Multi-Agent Synthesis:** Click **Run AI Multi-Agent Analysis**.
    - Notice the **Data Privacy Confirmation Dialog** explaining exactly what extracted text will be transmitted to Groq LLM before proceeding.
-   - Six specialized forensic agents (Header, Content, Infrastructure, Brand Impersonation, Behavioral, Financial) analyze the evidence concurrently.
+   - Six specialized forensic agents (`TextDetectiveAgent`, `UrlDetectiveAgent`, `EmailDetectiveAgent`, `FileAnalystAgent`, `IntelligenceCorrelationAgent`, `InvestigationReportAgent`) analyze the evidence.
    - Inferences are strictly tagged `AI_INFERENCE` so judges and analysts always know what was mathematically extracted vs. machine-inferred.
 
 ### Step 5: Export / Print Court-Ready Forensic Report
@@ -86,7 +90,7 @@ PhantomTrace is engineered for maximum operational reliability:
 
 PhantomTrace maintains rigorous automated test coverage across both frontend and backend:
 
-### Backend (202 Tests: 193 Unit/Integration + 9 Property-Based Tests across 4 PBT Suites)
+### Backend (213 Tests: 204 Unit/Integration + 9 Property-Based Tests across 4 PBT Suites)
 ```bash
 cd backend
 mvn test

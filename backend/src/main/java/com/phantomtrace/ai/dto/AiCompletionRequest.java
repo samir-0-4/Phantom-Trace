@@ -1,5 +1,6 @@
 package com.phantomtrace.ai.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
 
@@ -7,8 +8,8 @@ public record AiCompletionRequest(
         String model,
         List<Message> messages,
         Double temperature,
-        Integer maxTokens,
-        Map<String, Object> responseFormat
+        @JsonProperty("max_tokens") Integer maxTokens,
+        @JsonProperty("response_format") Map<String, Object> responseFormat
 ) {
     public record Message(String role, String content) {
         public static Message system(String content) {

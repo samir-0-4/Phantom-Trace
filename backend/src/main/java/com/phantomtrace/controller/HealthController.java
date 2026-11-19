@@ -3,13 +3,12 @@ package com.phantomtrace.controller;
 import com.phantomtrace.dto.HealthResponse;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/health")
 public class HealthController {
 
     private final EntityManager entityManager;
@@ -27,7 +26,7 @@ public class HealthController {
         this.entityManager = entityManager;
     }
 
-    @GetMapping
+    @GetMapping(value = {"/api/v1/health", "/actuator/health"})
     public ResponseEntity<HealthResponse> getHealth() {
         boolean dbConnected = checkDb();
         boolean groqConfigured = groqApiKey != null && !groqApiKey.isBlank();
@@ -38,7 +37,9 @@ public class HealthController {
                 ? HealthResponse.up(dbConnected, groqConfigured, virusTotalConfigured, urlhausConfigured)
                 : HealthResponse.degraded(false, groqConfigured, virusTotalConfigured, urlhausConfigured);
 
-        return ResponseEntity.ok(health);
+        return dbConnected
+                ? ResponseEntity.ok(health)
+                : ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(health);
     }
 
     private boolean checkDb() {
