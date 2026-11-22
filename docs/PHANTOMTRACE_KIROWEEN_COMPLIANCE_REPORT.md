@@ -1,4 +1,4 @@
-# PhantomTrace — Kiroween 2026 Official Compliance Audit
+# PhantomTrace — Kiroween 2026 historical audit
 **Hackathon:** Kiroween 2026  
 **Category:** Frankenstein (Cybersecurity / Forensic Intelligence / Multi-Agent Hybrid)  
 **Evaluator:** Principal QA / DevSecOps / Hackathon Submission Reviewer  
@@ -6,6 +6,8 @@
 **Repository:** https://github.com/samir-0-4/Phantom-Trace  
 **Live Frontend:** https://phantomtrace04.vercel.app  
 **Live Backend:** https://phantomtrace-backend-vhxt.onrender.com  
+
+This audit records the earlier review. Use the [current rules verification](hackathon/rules-verification.md) and [production audit](../video/PRODUCTION_REPORT.md) for submission decisions.
 
 ---
 
@@ -15,17 +17,17 @@
 |---|---|:---:|---|
 | 1 | **Public GitHub Repository** | **PASS** | Repository is publicly accessible at `https://github.com/samir-0-4/Phantom-Trace`. |
 | 2 | **Functional Software Application** | **PASS** | Live single-page web app deployed on Vercel CDN and Spring Boot REST API deployed on Render with PostgreSQL persistence. |
-| 3 | **Development Window Compliance** | **PASS** | All git commit timestamps originate within the permitted hackathon development window (November 10–14, 2026). Git history confirms project start from baseline commits. |
+| 3 | **Development window** | **HISTORY CONSISTENT** | The main branch history spans November 10–19, 2026, within the submission period. The entrant must verify project originality and disclose applicable earlier work. |
 | 4 | **Root-level `.kiro/` Directory** | **PASS** | `.kiro/` is located at repository root, strictly preserved, and tracked in git. |
-| 5 | **`.kiro/` Files Tracked by Git** | **PASS** | All `.kiro` files (specs, steering, hooks, custom agents, MCP config) are checked into Git. `.gitignore` explicitly enforces `!.kiro/` and `!.kiro/**`. |
-| 6 | **Open-Source License** | **PASS** | Permissive `Apache License 2.0` included in root `LICENSE` file. |
+| 5 | **`.kiro/` files tracked by Git** | **VERIFY FINAL BRANCH** | The root directory is tracked and `.gitignore` explicitly includes `!.kiro/` and `!.kiro/**`. Verify the final hook and profile files on the public default branch. |
+| 6 | **Recognized open-source license** | **VERIFY ON GITHUB** | The earlier public Apache-style file was abbreviated. Confirm GitHub About recognizes the final license after publication. |
 | 7 | **Functional Application Live URL** | **PASS** | Frontend is live at `https://phantomtrace04.vercel.app`, routing to backend API at `https://phantomtrace-backend-vhxt.onrender.com/api/v1`. |
-| 8 | **Public YouTube Demo Video (<3 min)** | **NEEDS MANUAL ACTION** | Storyboard and production script completed in `docs/PHANTOMTRACE_DEMO_VIDEO_STORYBOARD.md`. Local video file `PhantomTrace_Demo_Video.mp4` generated. User must upload to YouTube and paste public URL into `README.md:33`. |
+| 8 | **Public YouTube demo video under three minutes** | **PENDING** | The 2:50 local draft is documented in the [production report](../video/PRODUCTION_REPORT.md). Enter the publicly visible YouTube URL in Devpost after the public release is approved. |
 | 9 | **Project Description & Narrative** | **PASS** | Comprehensive problem statement, forensic architecture, truth framework, and UI gallery documented in `README.md`. |
 | 10 | **Kiro Usage Write-Up & Proof** | **PASS** | Comprehensive Kiro documentation in `docs/KIRO_USAGE.md` detailing specs, hooks, custom agents, MCP configs, steering, and property-based testing. |
 | 11 | **Hackathon Category Fit (Frankenstein)** | **PASS** | Perfectly embodies Frankenstein: combining deterministic cryptographic parsers, regex extractors, graph algorithms, and six concurrent generative LLM agents into a unified, self-contained cyber forensic platform. |
 | 12 | **Judge Testing Instructions** | **PASS** | Complete step-by-step 5-minute evaluation guide in `docs/JUDGE_GUIDE.md` with 1-click synthetic demo seeding, graph inspection, and audit report generation. |
-| 13 | **Reliable Access During Judging** | **PASS** | Keep-alive monitoring instructions and diagnostic health endpoints configured and documented in `docs/DEPLOYMENT_NOTES.md`. |
+| 13 | **Reliable access during judging** | **VERIFY BEFORE SUBMISSION** | Check the actual Render database expiration and availability through the judging period. [Deployment notes](DEPLOYMENT_NOTES.md) |
 
 ---
 
@@ -33,8 +35,8 @@
 
 ### Requirement 1–3: Repository, Licensing & Development Window
 - Git log inspection confirms initial commits on November 10, 2026 and feature development through mid-November 2026.
-- The `LICENSE` file is Apache 2.0.
-- No third-party proprietary code is improperly embedded.
+- Use the canonical license text in the root `LICENSE`, and confirm recognition in the public GitHub About section.
+- The entrant must confirm authorization for any third-party work or integrations in the submission.
 
 ### Requirement 4–5: `.kiro/` Integrity & Artifact Validation
 The repository contains 35+ tracked Kiro artifacts:
@@ -66,23 +68,19 @@ The repository contains 35+ tracked Kiro artifacts:
   ```
 - Both `/api/v1/health` and `/actuator/health` are bridged and accessible without authentication.
 
-### Requirement 8: Demo Video Status
-- Complete storyboard created in `docs/PHANTOMTRACE_DEMO_VIDEO_STORYBOARD.md` with runtime of 2 minutes 45 seconds (strictly compliant with the 3-minute limit).
-- The user must perform the YouTube upload and update `README.md:33`.
+### Requirement 8 — Demo video status
+- The 2:50 original draft and its capture limitations are documented in the [production report](../video/PRODUCTION_REPORT.md).
+- Public release requires publication clearance for the narration and other materials, then a publicly visible YouTube link in Devpost. [Official rules](https://kiroween.devpost.com/rules)
 
 ---
 
 ## 3. Remaining Submission Tasks for User
 
-1. **Upload Demo Video to YouTube:**
-   - Follow storyboard in `docs/PHANTOMTRACE_DEMO_VIDEO_STORYBOARD.md`.
-   - Set visibility to **Public** or **Unlisted**.
-   - Copy the YouTube video URL.
-2. **Update README.md Video Link:**
-   - In `README.md:33`, replace `[Watch PhantomTrace Demo](YOUTUBE_VIDEO_URL)` with the real YouTube link.
-3. **Submit on Hackathon Platform:**
+1. **Publish the cleared demo on YouTube.** Set visibility to **Public** and copy the video URL.
+2. **Complete the Devpost submission.**
    - Project Name: **PhantomTrace**
    - Category: **Frankenstein**
    - Repository URL: `https://github.com/samir-0-4/Phantom-Trace`
    - Application URL: `https://phantomtrace04.vercel.app`
-   - Video URL: *Your YouTube video link*
+   - Video URL: *Your public YouTube video link*
+3. **Optionally link the published video in the README.** The required link belongs in the Devpost submission.

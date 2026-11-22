@@ -1,3 +1,8 @@
+---
+name: test-writer
+description: Writes and reviews automated tests and verification evidence for PhantomTrace.
+---
+
 # Kiro Custom Agent: Test Writer & Verification Engineer
 
 ## Role

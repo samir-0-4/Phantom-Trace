@@ -9,9 +9,9 @@
 [![Vite](https://img.shields.io/badge/Vite-6-purple.svg)](https://vitejs.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
 [![Vercel Frontend](https://img.shields.io/badge/Vercel-Frontend%20Live-black.svg?logo=vercel)](https://phantomtrace04.vercel.app)
-[![Render Backend](https://img.shields.io/badge/Render-Backend%20Live-46E3B7.svg?logo=render)](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health)
-[![Backend Tests](https://img.shields.io/badge/Backend%20Tests-211%2F211%20Passing-brightgreen.svg)]()
-[![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-33%2F33%20Passing-brightgreen.svg)]()
+[![Render Backend](https://img.shields.io/badge/Render-Backend%20Health-46E3B7.svg?logo=render)](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health)
+[![Backend Tests](https://img.shields.io/badge/Backend%20Tests-225%2F225%20Passing-brightgreen.svg)]()
+[![Frontend Tests](https://img.shields.io/badge/Frontend%20Tests-34%2F34%20Passing-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Kiroween Category](https://img.shields.io/badge/Kiroween%202026-Frankenstein-red.svg)]()
 
@@ -23,14 +23,13 @@
 > - 🤖 **[Kiro Usage Architecture](docs/KIRO_USAGE.md)** — Hooks, custom agents, steering, MCP, and PBT
 > - 🧪 **[Property-Based Testing Findings](docs/PBT_FINDINGS.md)** — 4,000+ randomized inputs, invariants, and boundary bug fixes
 > - 🔌 **[MCP Usage Guide](docs/MCP_USAGE.md)** — PostgreSQL and GitHub MCP server integration
-> - 🚀 **[Deployment Notes](docs/DEPLOYMENT_NOTES.md)** — Render PostgreSQL 30-day renewal guide and keep-alive ping schedule
+> - 🚀 **[Deployment Notes](docs/DEPLOYMENT_NOTES.md)** — Deployment checks, database retention, and judge access
 
 ---
 
 ## Demo & Screenshots
 
-<!-- TODO: replace with final YouTube URL before submission -->
-[Watch PhantomTrace Demo](YOUTUBE_VIDEO_URL)
+Follow the [judge guide](docs/JUDGE_GUIDE.md) to explore the built-in synthetic investigation.
 
 ### Application Gallery (Live Captures)
 
@@ -62,9 +61,9 @@
 ![AI Consent Modal](docs/images/ai-consent-modal.png)
 *Explicit data transmission warning informing investigators before raw extracted text is dispatched to external LLMs.*
 
-#### 8. Court-Ready Forensic Dossier & Audit Report
+#### 8. Printable Forensic Dossier
 ![Forensic Report](docs/images/forensic-report.png)
-*Persisted tamper-evident case report adhering to strict Epistemic Truth standards (VERIFIED, AI_INFERENCE, UNKNOWN) with print layout.*
+*Saved case report with a print layout and a legend for `VERIFIED`, `AI_INFERENCE`, and `UNKNOWN`.*
 
 ### Architecture & Multi-Agent Diagrams
 
@@ -74,7 +73,7 @@
 
 #### Six-Agent Forensic Reasoning Pipeline
 ![Six-Agent Flow Diagram](docs/images/agents-flow.png)
-*Generated workflow diagram detailing the concurrent analysis pipeline across the six specialized detective agents.*
+*Workflow diagram showing the six available analysis roles. The evidence type and extracted indicators determine which roles run.*
 
 > [!NOTE]
 > **Synthetic Demonstration Data:** All investigation records and indicators depicted in these captures are safe, simulated demonstration fixtures utilizing RFC 2606 reserved domains (`.test`) and RFC 5737 documentation IP ranges (`TEST-NET-2`). No real-world infrastructure or personally identifiable information is referenced.
@@ -125,7 +124,7 @@ Security analysts, fraud responders, and individuals lack a unified platform tha
 1. **Ingest Multi-Channel Evidence** — Securely store SMS alerts, emails (with headers), raw URLs, documents (PDF), and images (screenshots, QR codes) within an isolated investigation dossier.
 2. **Deterministic Extraction First** — Extract indicators (URLs, domains, IPs, emails, phone numbers, urgency phrases, payment terms, OTP tokens) using strict RFC-compliant regex parsers without relying on non-deterministic LLMs.
 3. **External Threat Verification** — Cross-reference extracted indicators against live VirusTotal v3 and Abuse.ch URLhaus feeds with persistent database caching and explicit unavailability handling.
-4. **Multi-Agent Forensic Reasoning** — Coordinate six specialized AI agents powered by Groq (LLaMA-3.3-70B) that produce structured JSON findings tagged with confidence scores and evidence references.
+4. **Multi-Agent Forensic Reasoning** — Select specialized Groq agents based on the evidence. Their structured results carry confidence scores, evidence references, and AI provenance.
 5. **Reconstruct Attack Campaigns** — Uncover shared infrastructure across multiple independent investigations to identify correlated campaign-level infrastructure patterns.
 6. **Transparent Heuristic Risk Scoring** — Calculate 0–100 risk scores with granular signal weights and independent confidence tracking.
 7. **Persisted Forensic Reporting** — Generate persisted case dossiers with epistemic badges (`VERIFIED`, `AI_INFERENCE`, `UNKNOWN`) ready for print or PDF export.
@@ -211,7 +210,7 @@ In accordance with strict cybersecurity forensic practices, PhantomTrace enforce
 
 ## Six Specialized Forensic AI Agents
 
-PhantomTrace orchestrates six specialized AI agents powered by Groq (`llama-3.3-70b-versatile`) with structured JSON schema enforcement and per-agent failure isolation:
+When Groq is configured, PhantomTrace selects from six specialized roles. The current source defaults to `openai/gpt-oss-120b`, validates the structured responses, and isolates per-agent failures.
 
 ```mermaid
 flowchart TD
@@ -260,7 +259,7 @@ flowchart LR
     end
 
     subgraph External["External Threat Feeds & AI"]
-        GROQ["Groq API\n(LLaMA-3.3-70B)"]
+        GROQ["Groq API\n(GPT-OSS 120B)"]
         VT["VirusTotal v3\n(Engine Stats)"]
         UH["URLhaus API\n(Abuse.ch)"]
     end
@@ -515,7 +514,8 @@ Open `http://localhost:5173` in your browser.
 | `JWT_SECRET` | ✅ | `openssl rand -base64 32` | HS256 secret key ($\ge 256$ bits) |
 | `JWT_EXPIRATION_MS` | — | `86400000` (24h) | Token lifespan in milliseconds |
 | `GROQ_API_KEY` | ⚠️ | `gsk_...` | Groq API key for AI agent analysis |
-| `GROQ_DEFAULT_MODEL` | — | `llama-3.3-70b-versatile` | Groq model identifier |
+| `GROQ_DEFAULT_MODEL` | — | `openai/gpt-oss-120b` | Groq model identifier |
+| `GROQ_MAX_OUTPUT_TOKENS` | — | `3200` | Per-agent completion token budget |
 | `VIRUSTOTAL_API_KEY` | ⚠️ | `...` | VirusTotal v3 API key |
 | `URLHAUS_API_KEY` | ⚠️ | `...` | Abuse.ch URLhaus API key |
 | `THREAT_LOOKUP_STRIP_QUERY` | — | `true` | Strip sensitive URL query strings and fragments before threat lookups |
@@ -535,24 +535,24 @@ Open `http://localhost:5173` in your browser.
 
 ## Verification & Automated Test Results
 
-All test suites and production builds have been verified directly in the environment:
+Run these checks from the repository root:
 
 ```bash
 # Run backend tests
-cd backend && mvn test
+(cd backend && mvn test)
 
 # Run frontend tests, linting, and build
-cd frontend && npm test -- --run && npm run lint && npm run build
+(cd frontend && npm test -- --run && npm run lint && npm run build)
 ```
 
 ### Exact Verified Metrics
 
 | Test Suite | Total Tests | Passed | Failed | Errors | Skipped | Status |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Backend Suite (JUnit 5 + Mockito + jqwik PBT)** | **211** | **211** | **0** | **0** | **0** | ✅ **PASSING** |
-| **Frontend Suite (Vitest + RTL)** | **33** | **33** | **0** | **0** | **0** | ✅ **PASSING** |
+| **Backend Suite (JUnit 5 + Mockito + jqwik PBT)** | **225** | **225** | **0** | **0** | **0** | ✅ **PASSING** |
+| **Frontend Suite (Vitest + RTL)** | **34** | **34** | **0** | **0** | **0** | ✅ **PASSING** |
 | **Frontend ESLint Check** | Codebase | Clean | **0** | **0** | — | ✅ **0 ERRORS / 0 WARNS** |
-| **Frontend Production Build (Vite)** | 1,727 modules | Clean | **0** | **0** | — | ✅ **BUILT IN ~1.6s** |
+| **Frontend Production Build (Vite)** | Production bundle | Clean | **0** | **0** | — | ✅ **BUILT** |
 
 > [!NOTE]
 > **Property-Based Testing & Forensic Test Isolation:** The backend suite includes 4 dedicated `jqwik` property-based testing (PBT) suites (`SecurityManagerPbt`, `SyntheticIndicatorDetectorPbt`, `DeterministicExtractionServicePbt`, `RiskAssessmentPbt`) executing 4,000+ randomized trials verifying mathematical clamping ($[0, 100]$), buffer bounds ($\le 24,000$), and RFC compliance (see [docs/PBT_FINDINGS.md](docs/PBT_FINDINGS.md)). In accordance with forensic testing integrity, automated tests do not claim live external VirusTotal or URLhaus verification based on mocked test executions; live threat lookups execute in runtime environments when API keys are configured.
@@ -572,7 +572,7 @@ cd frontend && npm test -- --run && npm run lint && npm run build
 - **Rate Limiting:** In-memory Bucket4j token bucket limits registration, authentication, evidence ingestion, and external lookups per client IP address.
 - **Cryptographic Authentication:** Passwords hashed with bcrypt; JWT tokens signed with HS256 enforcing minimum 256-bit entropy.
 - **SQL Injection Prevention:** 100% parameterized queries via Spring Data JPA and Hibernate ORM.
-- **Pre-Commit Secret Scanning:** Checked-in git hook (`.kiro/hooks/pre-commit-check.sh`) prevents accidental commit of `.env` files.
+- **Staged Secret Check:** `.kiro/hooks/pre-commit-check.sh` checks staged changes for real `.env` files and common secret assignments when invoked.
 
 ---
 
@@ -581,7 +581,7 @@ cd frontend && npm test -- --run && npm run lint && npm run build
 To preserve technical credibility under adversarial forensic scrutiny:
 
 1. **OCR Quality Dependencies:** Tess4J relies on image resolution and contrast. Low-resolution or heavily distorted screenshots can produce partial OCR extractions.
-2. **AI Inference Boundaries:** Findings generated by Groq LLM agents are explicitly marked `AI_INFERENCE`. They represent probabilistic analytical hypotheses and are never described as verified forensic facts. Epistemic badges (`VERIFIED`, `AI_INFERENCE`, `UNKNOWN`) strictly separate deterministic cryptographic and regex extractions from generative LLM reasoning. Furthermore, composite risk scores are explainable heuristic aggregations, not statistical probabilities.
+2. **AI Inference Boundaries:** Model-generated findings have source `AI` and carry `AI_INFERENCE` or `UNKNOWN`. Risk scores are explainable heuristic aggregations. Deterministic extractions and independent checks have their own provenance.
 3. **External Threat Feed Quotas:** Live queries to VirusTotal and URLhaus are subject to external API rate limits. When limits are exceeded or credentials are not configured, indicators gracefully fall back to local heuristic analysis and are marked `UNKNOWN` (never falsely represented as clean).
 4. **External Evidence Processing & Sensitive Data Guidance:**
    - **What Groq Receives:** When AI analysis is invoked (`POST /api/v1/evidence/{id}/analysis`), Groq receives the **full extracted textual content** of the evidence—including message text, email subject/body/headers, PDF text extractions, and OCR image transcripts (bounded to 24,000 characters by `SecurityManager`), alongside extracted indicators. While raw binary files remain on the local server, **all text extracted from evidence is transmitted externally to Groq** over HTTPS.
@@ -595,7 +595,7 @@ To preserve technical credibility under adversarial forensic scrutiny:
 6. **JWT Storage in Browser LocalStorage:** The Single-Page Application (SPA) frontend stores authentication JWT tokens in browser `localStorage`. While standard for lightweight SPA architectures, this storage model is susceptible to token exfiltration if Cross-Site Scripting (XSS) occurs. Production enterprise deployments should transition to `HttpOnly` Secure SameSite cookies with CSRF token protection.
 7. **In-Memory Rate Limiting:** The Bucket4j token bucket rate limiter maintains IP request counters in local JVM heap memory. While effective for single-instance deployments, rate limit states reset when the service restarts and do not synchronize across horizontally scaled multi-node clusters without an external distributed store like Redis.
 8. **Render Free Ephemeral Filesystem Storage:** Uploaded files default to local filesystem storage (`/app/uploads` or `/tmp`). On containerized cloud platforms like Render's free tier without persistent disk mounts, uploaded files are ephemeral and reset during application redeployments or restarts. Production deployments must configure persistent cloud block storage or S3-compatible object storage.
-9. **Render Free PostgreSQL Retention Policy:** Render's free PostgreSQL tier imposes a 30-day database lifespan and connection limits, requiring periodic database renewal or migration to a persistent managed database tier for long-term historical records.
+9. **Render Free PostgreSQL Retention Policy:** Free Render PostgreSQL expires 30 days after creation. Verify the active database plan and expiry, and preserve judge access through the judging period.
 10. **No Raw WHOIS / RDAP Queries:** Domain age, registrant names, and ASN details are not queried via raw sockets to maintain server isolation and prevent network egress exposure.
 11. **IPv6 Indicator Extraction Pipeline:** The deterministic extraction pipeline (`DeterministicExtractionService`) currently targets IPv4 addresses (`IP_ADDRESS`). IPv6 indicators—including documentation ranges such as RFC 3849 (`2001:db8::/32`)—are not parsed by the regular expression pipeline. Synthetic indicator detection for RFC 5737 TEST-NET ranges strictly targets IPv4.
 
@@ -625,11 +625,13 @@ Every major subsystem was developed following Kiro specifications (`requirements
 - `investigation-reports` — Persistent dossier generation and print export.
 - `auth-foundation` & `backend-foundation` — Security and data layer foundation.
 
-### 3. Real Agent Hooks (`.kiro/hooks/`)
-- `.kiro/hooks/backend-test-on-save.kiro.hook` — Runs `mvn test` on Spring Boot file saves.
-- `.kiro/hooks/frontend-lint-on-save.kiro.hook` — Runs ESLint on React component saves.
-- `.kiro/hooks/extraction-privacy-review-on-save.kiro.hook` — Reviews extraction updates against privacy documentation.
-- Companion shell hooks: `pre-commit-check.sh`, `backend-test.sh`, `frontend-lint-build.sh`.
+### 3. Agent Hook Configuration (`.kiro/hooks/`)
+- `.kiro/hooks/backend-tests-on-save.json` — Configures Maven tests when Kiro saves matching Java files.
+- `.kiro/hooks/frontend-lint.json` — Configures ESLint when Kiro saves matching frontend JavaScript files.
+- `.kiro/hooks/extraction-privacy-review-on-save.json` — Prompts Kiro to review extraction changes against tests and privacy documentation.
+- `.kiro/hooks/pre-commit-check.sh` — Checks staged changes for common secret assignments and real `.env` files.
+
+The [Kiro usage write-up](docs/KIRO_USAGE.md) distinguishes registered hooks from verified runs.
 
 ### 4. Custom Kiro Agents (`.kiro/agents/`)
 - `.kiro/agents/test-writer.md` — Specialized agent for property-based testing and deterministic invariant validation.
@@ -642,9 +644,7 @@ Every major subsystem was developed following Kiro specifications (`requirements
 
 ## Pre-Existing Code Disclosure & License
 
-**All code in this repository was written between November 10–14, 2026.**
-
-No proprietary, closed-source, or pre-existing third-party codebase was used. All libraries and tools are open-source and declared in `frontend/package.json` and `backend/pom.xml`.
+PhantomTrace’s public commit history begins on November 10, 2026 (IST), during the Kiroween 2026 submission window. The application uses dependencies declared in `frontend/package.json` and `backend/pom.xml`, and optional external services are documented above.
 
 ### License
 This project is licensed under the **Apache License 2.0**. See the [LICENSE](LICENSE) file for details.

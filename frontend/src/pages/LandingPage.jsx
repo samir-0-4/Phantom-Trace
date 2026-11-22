@@ -214,7 +214,7 @@ export const LandingPage = () => {
                         className="h-2 w-2 animate-pulse rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.9)]"
                       />
                       <span className="font-mono text-[11px] font-bold tracking-[0.12em] text-slate-100">
-                        CASE #PT-2026-9941
+                        SYNTHETIC CASE
                       </span>
                     </div>
                     <Badge variant="CRITICAL">Critical Risk (92/100)</Badge>
@@ -226,13 +226,12 @@ export const LandingPage = () => {
                         Ingested Evidence
                       </span>
                       <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-400">
-                        SMS Payload
+                        Illustrative SMS
                       </span>
                     </div>
                     <p className="text-xs leading-relaxed text-slate-200">
-                      &ldquo;Your electricity connection will be disconnected
-                      tonight at 9:30 PM due to unpaid bill. Call 9876543210 or
-                      visit bit.ly/power-bill-update immediately.&rdquo;
+                      &ldquo;A sign-in from 198.51.100.42 was logged. Review the
+                      notice at https://billing.example.test/notice by 9:30 PM.&rdquo;
                     </p>
                   </div>
 
@@ -244,19 +243,19 @@ export const LandingPage = () => {
                     <div className="space-y-1.5">
                       {[
                         {
-                          value: "bit.ly/power-bill-update",
+                          value: "https://billing.example.test/notice",
                           badge: "VERIFIED",
-                          label: "Redirect URL",
+                          label: "Extracted URL",
                           mono: true,
                         },
                         {
-                          value: "+91 98765 43210",
-                          badge: "INFERENCE",
-                          label: "Prepaid SIM",
+                          value: "198.51.100.42",
+                          badge: "VERIFIED",
+                          label: "Extracted IP",
                           mono: true,
                         },
                         {
-                          value: "Urgency: tonight at 9:30 PM",
+                          value: "Deadline: 9:30 PM",
                           badge: "CRITICAL",
                           label: "High Pressure",
                           mono: false,
@@ -313,21 +312,21 @@ export const LandingPage = () => {
               icon: ScanSearch,
               title: "Ingest Evidence",
               description:
-                "Submit suspicious text messages, email headers, raw URLs, payment requests, or file payloads (PNG, JPG, PDF) into an isolated case container with zero execution risk.",
+                "Submit suspicious messages, email headers, URLs, or files as evidence in an isolated investigation.",
             },
             {
               step: "02",
               icon: Network,
               title: "Deterministic Extraction",
               description:
-                "Automated regex and pattern engines extract network indicators and urgency markers. Evasive redirect paths are unmasked safely against external threat intelligence.",
+                "Extract network indicators and urgency markers. Optional lookups check eligible URLs against external threat intelligence.",
             },
             {
               step: "03",
               icon: Sparkles,
               title: "Epistemic Synthesis",
               description:
-                "AI agents cross-correlate indicators into an interactive relationship graph, distinguishing verified facts from machine inferences with an audited risk score.",
+                "Explore evidence relationships and shared indicators in an interactive graph. The report separates verified facts, AI inferences, and unknowns.",
             },
           ].map(({ step, icon: Icon, title, description }) => (
             <Card key={step}>

@@ -3,7 +3,9 @@ package com.phantomtrace.ai.agent;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.phantomtrace.ai.dto.AiFinding;
 import com.phantomtrace.ai.dto.StructuredAiResponse;
+import com.phantomtrace.enums.EpistemicStatus;
 import com.phantomtrace.exception.ApiException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -23,21 +25,29 @@ public class StructuredAiResponseParser {
                     || result.limitations() == null) {
                 throw invalid();
             }
-            result.findings().forEach(finding -> {
-                if (finding.title() == null || finding.description() == null
-                        || finding.severity() == null || finding.confidence() < 0
-                        || finding.confidence() > 1 || finding.evidenceReference() == null
-                        || finding.explanation() == null || finding.recommendedAction() == null
-                        || finding.sourceType() == null) {
-                    throw invalid();
-                }
-            });
-            return result;
+            List<AiFinding> findings = result.findings().stream().map(this::validatedModelFinding).toList();
+            return new StructuredAiResponse(result.agentName(), findings, result.indicators(), result.summary(),
+                    result.limitations());
         } catch (ApiException ex) {
             throw ex;
         } catch (Exception ex) {
             throw invalid();
         }
+    }
+
+    private AiFinding validatedModelFinding(AiFinding finding) {
+        if (finding.title() == null || finding.description() == null
+                || finding.severity() == null || finding.confidence() < 0
+                || finding.confidence() > 1 || finding.evidenceReference() == null
+                || finding.explanation() == null || finding.recommendedAction() == null
+                || finding.sourceType() == null) {
+            throw invalid();
+        }
+
+        String verification = EpistemicStatus.AI_INFERENCE.name().equals(finding.verificationStatus())
+                ? EpistemicStatus.AI_INFERENCE.name() : EpistemicStatus.UNKNOWN.name();
+        return new AiFinding(finding.title(), finding.description(), finding.severity(), finding.confidence(),
+                verification, finding.evidenceReference(), finding.explanation(), finding.recommendedAction(), "AI");
     }
 
     private ApiException invalid() {

@@ -97,7 +97,8 @@ public class RiskAssessmentService {
         if (executionRepository != null) {
             hasAiAnalysis = evidence.stream().anyMatch(ev ->
                     executionRepository.findByEvidenceIdOrderByCompletedAtDesc(ev.getId()).stream()
-                            .anyMatch(exec -> "SUCCESS".equalsIgnoreCase(exec.getExecutionStatus())
+                            .anyMatch(exec -> ("COMPLETED".equalsIgnoreCase(exec.getExecutionStatus())
+                                    || "SUCCESS".equalsIgnoreCase(exec.getExecutionStatus()))
                                     && exec.getOutputJson() != null && !exec.getOutputJson().isBlank()));
         }
 

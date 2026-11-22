@@ -1,90 +1,25 @@
-# PhantomTrace — Production Deployment & Maintenance Guide
-**Kiroween 2026 Hackathon | Category: Frankenstein**
+# PhantomTrace deployment and judge access
 
-This document covers operational guidance, resilience practices, and maintenance procedures for the live deployment of PhantomTrace.
+The production frontend runs on Vercel. The Spring Boot backend and PostgreSQL database run on Render. The repository includes a Render Blueprint and the application setup instructions. [Frontend](https://phantomtrace04.vercel.app) · [Backend health](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health) · [Render Blueprint](../render.yaml) · [Local setup](../README.md)
 
----
+## Observed deployment and release candidate
 
-## 1. Live Deployment Architecture
+The 21 November 2026 production capture verified registration, sign-in, evidence intake, the synthetic campaign, graph exploration, campaign reconstruction, and report generation. The first Render health check timed out and a later retry succeeded. The AI request reached the deployed application and recorded four upstream HTTP 404 failures on the retired model. A local release candidate subsequently completed four agents against live Groq, persisted nine AI findings, and saved a report. Confirm those results on the live deployment after release. [Production and remediation audit](../video/PRODUCTION_REPORT.md)
 
-| Tier | Provider | Service / URL | Configuration |
-| :--- | :--- | :--- | :--- |
-| **Frontend** | Vercel Edge CDN | [https://phantomtrace04.vercel.app](https://phantomtrace04.vercel.app) | React 18 + Vite 6 Single Page App |
-| **Backend API** | Render Web Service | [https://phantomtrace-backend-vhxt.onrender.com](https://phantomtrace-backend-vhxt.onrender.com) | Spring Boot 3.4.2 (DockerTemurin 21) |
-| **Database** | Render Managed PostgreSQL | `phantomtrace-db` | PostgreSQL 16 with Flyway (V1–V10) |
-| **Blueprint** | Render Blueprint | `render.yaml` | Infrastructure-as-Code definition |
+Before releasing the candidate, confirm the effective Groq model configuration and access for the managed key. The repository defaults to `openai/gpt-oss-120b`. A deployment environment override takes precedence over the default. Keep API keys and database credentials in the deployment service's secret configuration. [Groq model deprecations](https://console.groq.com/docs/deprecations)
 
----
+An HTTP 200 from `/api/v1/health` with `dbConnected` confirms that the app can reach its database at that moment. The `groqConfigured` flag identifies a configured integration. Use a clean browser account and the fictional demo fixture to check actual agent completion, displayed finding provenance, and the generated report before treating production AI as verified. [Judge walkthrough](JUDGE_GUIDE.md)
 
-## 2. Render Free-Tier PostgreSQL 30-Day Renewal
-
-Render's free PostgreSQL instances expire after **30 days** unless upgraded or renewed.
-
-### Renewal & Expiration Schedule
-- If using Render's free tier, Render sends email reminders 7 days prior to database expiration.
-- To prevent database expiration during hackathon judging and evaluation:
-  1. Open the [Render Dashboard](https://dashboard.render.com).
-  2. Select the database instance: `phantomtrace-db`.
-  3. Under the **Settings** or banner alert, click **Renew Database**.
-
-### Automated Schema & Seed Recovery
-If the database ever expires or requires re-creation:
-1. PhantomTrace uses **Flyway database migrations** (`V1__baseline.sql` through `V10__investigation_tenant_isolation.sql`).
-2. When the backend starts up against any fresh PostgreSQL instance, Flyway **automatically rebuilds all tables, relations, and indices**.
-3. To immediately populate test cases after a database reset, navigate to `/campaign` and click **Seed Synthetic Campaign** (or trigger `POST /api/v1/investigations/seed-demo`).
-
----
-
-## 3. Cold Start Handling & Keep-Alive Ping
-
-### The Cold Start Behavior
-On Render's free web tier:
-- The backend instance spins down after **15 minutes** of inactivity.
-- The first inbound request spins the container back up, which requires **30 to 50 seconds** (JVM startup, Hibernate initialization, and Flyway migration verification).
-- Subsequent requests respond in **under 200 milliseconds**.
-
-### Keeping the Service Warm Until Jan 29, 2027
-To ensure hackathon judges experience instant response times without cold starts, set up an external uptime ping:
-
-1. **Recommended Free Uptime Monitors:**
-   - [UptimeRobot](https://uptimerobot.com) (free 5-minute HTTP checks)
-   - [Cron-Job.org](https://cron-job.org) (free scheduled HTTP requests)
-   - [Better Uptime](https://betterstack.com)
-2. **Ping Target URL (Canonical Health Endpoint):**
-   ```http
-   GET https://phantomtrace-backend-vhxt.onrender.com/api/v1/health
-   ```
-3. **Recommended Schedule:**
-   - Interval: Every **10 minutes**
-   - HTTP Method: `GET`
-   - Expected Status: `200 OK`
-   - Response Body: `{"status":"UP","application":"PhantomTrace",...}`
-
-Pinging `/api/v1/health` (or the bridged `/actuator/health`) every 10 minutes keeps the Render container warm continuously throughout the evaluation period.
-
----
-
-## 4. Privacy & External Intel Hardening
-
-The production deployment incorporates defense-in-depth privacy controls:
-
-| Environment Variable | Production Default | Security Purpose |
-| :--- | :--- | :--- |
-| `THREAT_LOOKUP_STRIP_QUERY` | `true` | Strips sensitive URL query parameters (tokens, session IDs) before sending to VirusTotal/URLhaus |
-| `JWT_SECRET` | Auto-configured secret | Signs tenant authentication tokens |
-| `GROQ_API_KEY` | Managed secret | Orchestrates the 6 forensic AI agents |
-| `SPRING_JPA_SHOW_SQL` | `false` | Prevents sensitive forensic evidence from leaking into container logs |
-
----
-
-## 5. Emergency Diagnostic Commands
-
-To test backend health directly from a terminal:
 ```bash
-# Verify Canonical API Health and Database Connection
-curl -i https://phantomtrace-backend-vhxt.onrender.com/api/v1/health
-
-# Verify Actuator Compatibility Bridge
-curl -i https://phantomtrace-backend-vhxt.onrender.com/actuator/health
+curl --fail --silent --show-error --max-time 90 \
+  https://phantomtrace-backend-vhxt.onrender.com/api/v1/health
 ```
 
+## Keep judge access available
+
+The rules require free testing and evaluation for judges through **29 January 2027 at 1:00 p.m. Pacific time**, which is **30 January at 2:30 a.m. IST**. On 22 November, Render showed `phantomtrace-db` available on its free plan with expiry on **14 December 2026 at 3:02 p.m. IST**, before judging starts. PhantomTrace uses this database. Keep its connection configured only on the Render backend. [Official testing requirement](https://kiroween.devpost.com/rules)
+
+- Render's free PostgreSQL expires after 30 days. Its 14-day grace period allows conversion to a paid compute plan after expiry. If the current database expires during the required period, arrange a durable database plan or migrate to another database, then verify judge access against the new connection before expiry. An uptime check cannot extend the database lifetime. [Render free plan limits](https://render.com/docs/free#free-postgres)
+- Render free web services can spin down after 15 minutes without traffic. A cold request can take around a minute. Document that wait in judge instructions and check the workspace's running-hour quota if using a monitor. [Render free web service limits](https://render.com/docs/free#free-web-services)
+- The demo uses text evidence and the built-in fictional campaign. If reviewers will upload files that must survive a restart or redeploy, verify persistent storage for the actual deployment. A free Render web service does not support persistent disks. [Render storage limits](https://render.com/docs/free#free-web-services)
+- After any change, test registration or the designated judge access route, seeding, graph selection, campaign results, AI completion, and reporting. Keep any required judge credentials in the private Devpost testing field. [Judge walkthrough](JUDGE_GUIDE.md)

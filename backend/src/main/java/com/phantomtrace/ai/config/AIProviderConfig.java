@@ -8,10 +8,10 @@ import org.springframework.context.annotation.Configuration;
 public class AIProviderConfig {
     private String apiKey;
     private String baseUrl = "https://api.groq.com/openai/v1";
-    private String model = "llama-3.3-70b-versatile";
+    private String model = "openai/gpt-oss-120b";
     private int timeoutSeconds = 30;
     private int maxInputCharacters = 24000;
-    private int maxOutputTokens = 1200;
+    private int maxOutputTokens = 3200;
 
     public String getApiKey() { return apiKey; }
     public void setApiKey(String apiKey) { this.apiKey = apiKey; }

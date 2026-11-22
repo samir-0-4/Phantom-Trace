@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 vi.mock('../src/services/investigation/investigationService');
@@ -49,6 +49,36 @@ describe('AnalysisResultsPage', () => {
     expect(screen.getByText('55/100')).toBeInTheDocument();
     expect(screen.getByText('Upfront payment request')).toBeInTheDocument();
     expect(screen.getByText('Extracted from submitted evidence')).toBeInTheDocument();
+  });
+
+  it('keeps unverified, verified, AI, and unknown findings distinct', async () => {
+    const cases = [
+      ['UNVERIFIED', 'Unverified'],
+      ['not externally verified', 'Unverified'],
+      ['VERIFIED', 'Verified'],
+      ['externally-verified', 'Verified by external source'],
+      ['AI_INFERENCE', 'AI assessment'],
+      ['UNKNOWN', 'Unknown'],
+      ['UNAVAILABLE', 'Unknown'],
+    ];
+    evidenceService.listAnalysis.mockResolvedValue([{
+      id: 'x1', agentName: 'TEXT_DETECTIVE', executionStatus: 'COMPLETED',
+      outputJson: JSON.stringify({
+        findings: cases.map(([verificationStatus]) => ({
+          title: verificationStatus,
+          severity: 'HIGH',
+          evidenceReference: 'e1',
+          sourceType: 'Test fixture',
+          verificationStatus,
+        })),
+      }),
+    }]);
+
+    renderPage();
+    for (const [status, label] of cases) {
+      const heading = await screen.findByRole('heading', { name: status, exact: true });
+      expect(within(heading.closest('article')).getByText(label)).toBeInTheDocument();
+    }
   });
 
   it('renders an empty state when analysis has not run', async () => {

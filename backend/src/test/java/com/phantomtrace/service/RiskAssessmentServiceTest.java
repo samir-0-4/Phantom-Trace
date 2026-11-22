@@ -8,6 +8,8 @@ import com.phantomtrace.security.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -31,6 +33,7 @@ class RiskAssessmentServiceTest {
     @Mock ThreatLookupRepository lookupRepository;
     @Mock RiskAssessmentRepository assessmentRepository;
     @Mock RiskContributionRepository contributionRepository;
+    @Mock AgentExecutionRepository executionRepository;
     @Mock SecurityUtils securityUtils;
 
     private UUID userId;
@@ -58,7 +61,7 @@ class RiskAssessmentServiceTest {
         lenient().when(lookupRepository.findByIndicatorId(any())).thenReturn(List.of());
         service = new RiskAssessmentService(investigationRepository, evidenceRepository, extractedRepository,
                 threatIndicatorRepository, lookupRepository, assessmentRepository, contributionRepository,
-                securityUtils, new RiskAssessmentProperties());
+                securityUtils, new RiskAssessmentProperties(), executionRepository);
     }
 
     @Test
@@ -235,6 +238,32 @@ class RiskAssessmentServiceTest {
         assertThat(result.explanation()).contains("Confidence is capped");
         assertThat(result.missingInformation()).contains("External threat intelligence");
         assertThat(result.missingInformation()).contains("Forensic AI agent analysis has not been executed");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "COMPLETED, {}, true",
+            "SUCCESS, {}, true",
+            "FAILED, {}, false",
+            "COMPLETED, ' ', false",
+            "COMPLETED, , false"
+    })
+    void requiresAPersistedAiResultBeforeRecognizingAnalysis(String status, String output, boolean hasAiAnalysis) {
+        Evidence evidence = evidence("Synthetic exercise involving a registration fee");
+        ExtractedIndicator fee = indicator(evidence, IndicatorType.PAYMENT_TERM, "fee");
+        AgentExecution execution = new AgentExecution(evidence, "TEXT_DETECTIVE", "test-model", status, 0,
+                output, null, Instant.now());
+        when(evidenceRepository.findByInvestigationIdOrderByCreatedAtDesc(investigationId)).thenReturn(List.of(evidence));
+        when(extractedRepository.findByEvidenceInvestigationId(investigationId)).thenReturn(List.of(fee));
+        when(executionRepository.findByEvidenceIdOrderByCompletedAtDesc(evidence.getId())).thenReturn(List.of(execution));
+
+        var result = service.assess(investigationId);
+
+        assertThat(result.missingInformation()).contains("External threat intelligence");
+        assertThat(result.missingInformation().contains("Forensic AI agent analysis has not been executed"))
+                .isEqualTo(!hasAiAnalysis);
+        assertThat(result.explanation().contains("Confidence is capped")).isEqualTo(!hasAiAnalysis);
+        assertThat(result.score()).isEqualTo(20);
     }
 
     @Test

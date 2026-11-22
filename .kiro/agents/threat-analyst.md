@@ -1,3 +1,8 @@
+---
+name: threat-analyst
+description: Reviews PhantomTrace evidence classification, correlation, and integration security.
+---
+
 # Kiro Custom Agent: Threat Analyst
 
 ## Role

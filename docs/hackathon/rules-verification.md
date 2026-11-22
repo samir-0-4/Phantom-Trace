@@ -1,21 +1,15 @@
-# Hackathon Rules Verification
+# Kiroween 2026 submission verification
 
-## Status
+The organizer's rules were checked against the PhantomTrace repository and the production recording on 21 November 2026. The submission deadline is **4 December 2026 at 2:00 p.m. Pacific time**, which is **5 December at 3:30 a.m. IST**. The sponsor and judges determine eligibility. [Official Kiroween 2026 rules](https://kiroween.devpost.com/rules)
 
-The repository audit and implementation evidence do not establish hackathon
-eligibility by themselves. The official Kiroween 2026 rules URL was not
-identified in the available project materials or the public Kiro documentation
-checked during this phase.
+| Requirement | Evidence and remaining check |
+| --- | --- |
+| Working Kiro-built project in a category | PhantomTrace combines deterministic extraction, AI interpretation, and graph-based correlation in the Frankenstein category. Its repository contains root-level Kiro specs, steering, and hooks. The Kiro IDE evidence distinguishes registered hooks from unverified execution. [Kiro write-up](../KIRO_USAGE.md) |
+| Public application and judge access | The deployed app was recorded through case intake, graph, campaign, and report. Production AI failed in that take. The successful replacement-model analysis was local. Verify deployed AI and retain free judge access through the end of judging. [Deployment notes](../DEPLOYMENT_NOTES.md) |
+| Public GitHub repository, source, instructions, and license | The public repository shows root `.kiro/`. Confirm that the final reviewed source and Kiro changes are available on the default branch and that GitHub's About section recognizes the open-source license. [Public GitHub repository](https://github.com/samir-0-4/Phantom-Trace) |
+| Demo under three minutes with authorized assets | The original recorded draft is 2:50 and shows the production application and genuine Kiro IDE. A public release needs narration and other materials cleared for public use, a final playback check, and a publicly visible YouTube URL entered in Devpost. The original Daniel System Voice narration requires replacement or separate authorization for public sharing. [Production report](../../video/PRODUCTION_REPORT.md) · [Apple macOS Tahoe license §2.F](https://www.apple.com/legal/sla/docs/macOSTahoe.pdf#page=3) |
+| Project description, Kiro write-up, and category | The Devpost draft provides the description, Frankenstein category, artifact links, and private testing instructions. Complete the required fields on Devpost. [Devpost draft](DEVPOST_SUBMISSION.md) |
+| New project and third-party rights | Main branch history begins in November 2026 during the submission period. The entrant must verify originality, disclose any applicable earlier work, and confirm authorized use of integrations and media. |
+| Entrant and optional bonus eligibility | The entrant must confirm registration, eligibility, and team details if applicable. Select bonus categories only when their conditions and required evidence are met. |
 
-Before submission, the owner must verify the official rules from the organizer's
-current announcement or submission portal and record:
-
-- eligibility and team requirements;
-- submission deadline and timezone;
-- required Kiro usage disclosure;
-- permitted external services and generated assets;
-- licensing, originality, and deployment requirements;
-- judging criteria and required demo links.
-
-No eligibility claim is made in this repository until those source documents are
-available and checked.
+The official rules require a publicly visible YouTube link in the **Devpost submission form**. Set YouTube visibility to **Public**. The repository may also link to the video after publication. Keep any required testing credentials in Devpost's private testing field. [Submission and testing rules](https://kiroween.devpost.com/rules)

@@ -1,86 +1,27 @@
-# Kiro Usage & Architecture Report
-**Kiroween 2026 Hackathon Submission | Category: Frankenstein**
+# How PhantomTrace used Kiro
 
-This document details how **Kiro** (Kiro IDE, Kiro CLI, Kiro Agent Hooks, Steering, Custom Agents, and MCP) was utilized throughout the engineering, hardening, and verification of **PhantomTrace**.
+PhantomTrace is a Kiroween 2026 Frankenstein project. We used Kiro IDE to organize development around specifications and steering files. The repository also contains custom agent profiles and hook definitions. The native IDE capture shows how these artifacts are laid out in the project. [Kiro evidence report](PHANTOMTRACE_KIRO_EVIDENCE_REPORT.md)
 
----
+## From a spec to a working evidence graph
 
-## 1. Executive Summary
+The evidence graph is a concrete example of the requirements, design, and task workflow. Requirements constrain the graph to nodes and relationships returned by the authenticated backend and define how to handle loading, empty, disconnected, and error states. The design maps backend records directly to React Flow and keeps layout and selection state in the frontend. The task list separates route and API integration, node and edge rendering, provenance inspection, and testing. [Requirements](../.kiro/specs/evidence-relationship-graph/requirements.md) · [Design](../.kiro/specs/evidence-relationship-graph/design.md) · [Tasks](../.kiro/specs/evidence-relationship-graph/tasks.md)
 
-PhantomTrace was built and audited using Kiro's developer platform to create a robust, multi-agent cyber fraud investigation engine. The project embodies the **Frankenstein** category—assembling six specialized AI analytical organs, deterministic indicator extractors, and cross-case correlation into a cohesive, production-grade security platform.
+That sequence makes the API contract and provenance requirement reviewable before changing the UI. During the production capture, selecting the fictional email evidence node displayed its source and verification state. The frontend tests exercise graph rendering and selection. Free-form prompts suit visual exploration. For this feature, the spec made it possible to check frontend behavior against the same source-of-truth rules throughout development. [Graph page](../frontend/src/pages/EvidenceGraphPage.jsx) · [Tests](../frontend/tests/EvidenceGraphPage.test.jsx) · [Production capture checks](PHANTOMTRACE_VIDEO_PREFLIGHT_REPORT.md)
 
-Kiro's capabilities were leveraged across five pillars:
-1. **Real Kiro Agent Hooks (`.kiro/hooks/*.kiro.hook`):** Event-driven automation executing tests, linters, and privacy audits on file save.
-2. **Custom Kiro Agent (`.kiro/agents/test-writer.md`):** Specialized agent persona for property-based testing and deterministic invariant validation.
-3. **Kiro Steering (`.kiro/steering/kiroween-theme.md`):** Project-wide constraints enforcing the Kiroween aesthetic, WCAG AA accessibility, and reduced-motion standards.
-4. **Model Context Protocol (MCP) (`.kiro/settings/mcp.json`):** Standardized context feeds for live PostgreSQL database schema inspection and GitHub repository metadata.
-5. **Property-Based Testing (PBT):** Rigorous fuzzing and invariant testing using `jqwik` on Java Spring Boot services.
+## Steering
 
----
+[Project rules](../.kiro/steering/project-rules.md) distinguish verified evidence, inference, and unknowns. The [architecture](../.kiro/steering/architecture.md) and [testing](../.kiro/steering/testing.md) files document service boundaries and testing expectations. [Frankenstein theme guidance](../.kiro/steering/kiroween-theme.md) connects the visual treatment to how the app assembles disparate evidence, with accessibility and reduced-motion requirements. Together these files keep decisions available across features and sessions.
 
-## 2. Kiro Agent Hooks (`.kiro/hooks/`)
+## Hooks and custom agents
 
-PhantomTrace defines real Kiro Agent Hook configuration files formatted to the Kiro IDE hook specification (`.kiro.hook` JSON schema). Alongside traditional shell scripts, these hooks provide IDE-native lifecycle triggers:
+The backend save hook is configured to run Maven tests when Kiro edits Java files. The frontend save hook is configured to run ESLint for JavaScript and JSX. A second Java save hook requests a privacy review when the extraction service or synthetic-indicator detector changes. Other definitions cover checks at the end of an agent turn and a pre-tool staged-secret check. The trusted Kiro IDE registered all seven definitions. A later test of the backend save workflow stopped at an HTTP 402 before Kiro edited the disposable file. Hook execution and the staged-secret hook's Git tool matching remain unverified. [Hook definitions](../.kiro/hooks) · [Trusted workspace audit](PHANTOMTRACE_KIRO_EVIDENCE_REPORT.md#trusted-workspace-audit)
 
-| Hook File | Trigger Event | Target Pattern | Action Description |
-| :--- | :--- | :--- | :--- |
-| `backend-test-on-save.kiro.hook` | `PostFileSave` | `^backend/src/.*\.java$` | Automatically triggers `cd backend && mvn test` to prevent regressions during Spring Boot development. |
-| `frontend-lint-on-save.kiro.hook` | `PostFileSave` | `^frontend/src/.*\.(js\|jsx)$` | Executes `cd frontend && npm run lint` to enforce React 18 and Tailwind formatting. |
-| `extraction-privacy-review-on-save.kiro.hook` | `PostFileSave` | `DeterministicExtractionService\|SyntheticIndicatorDetector` | Invokes an agent prompt reviewing extraction changes against PBT invariants and privacy documentation. |
+The [Threat Analyst](../.kiro/agents/threat-analyst.md) profile describes reviews for evidence classification, correlation, and integrations. The [Test Writer](../.kiro/agents/test-writer.md) profile focuses on invariants and automated regression coverage. The capture shows both profile files in Kiro. Selection and execution of the profiles remain unverified.
 
-In addition, shell companions exist under `.kiro/hooks/*.sh` for headless CI/CD execution:
-- `backend-test.sh`: Runs the full Maven test suite.
-- `frontend-lint.sh`: Runs ESLint across all frontend source files.
-- `check-compliance.sh`: Verifies no uncommitted `.env` files or secrets are tracked and validates `.kiro/` tracking.
+## Property-based testing
 
----
+Four jqwik suites exercise deterministic extraction, synthetic indicator detection, input sanitization, and the risk score's bounds and severity categories. The risk suite varies generated signal counts and flags with default weights. The service also clamps the score to the range from zero to 100. The available evidence supports the implemented checks, with no recorded attribution of the lower-bound change to a generated counterexample or a particular Kiro agent. [Property suites](../backend/src/test/java/com/phantomtrace/pbt) · [Risk property](../backend/src/test/java/com/phantomtrace/pbt/RiskAssessmentPbt.java) · [Score calculation](../backend/src/main/java/com/phantomtrace/service/RiskAssessmentService.java)
 
-## 3. Custom Kiro Agents (`.kiro/agents/`)
+## Integrations and scope
 
-### `test-writer` (`.kiro/agents/test-writer.md`)
-A dedicated Kiro custom agent configured with expertise in:
-- Property-Based Testing (PBT) using `jqwik` for Java 21 / Spring Boot 3.4.
-- Invariant definition: bounded outputs, mathematical clamping, idempotent sanitization, and state machine transitions.
-- Epistemic integrity verification: asserting that raw deterministic extractions never receive `AI_INFERENCE` labels, and AI inferences never receive `VERIFIED` labels.
-
----
-
-## 4. Kiro Steering (`.kiro/steering/`)
-
-### `kiroween-theme.md` (`.kiro/steering/kiroween-theme.md`)
-Defines the visual and architectural steering for the Kiroween 2026 Frankenstein theme:
-- **Design Philosophy:** Digital threat investigation stitched together from multi-vector fragments (SMS, email, PDF, screenshots, voice transcripts).
-- **Aesthetic Guidelines:** Deep eerie obsidian canvas (`#04060a`), spectral emerald/cyan glows (`#00C9C8` / `#10b981`), and stitched dashed border accents representing disparate evidence synthesis.
-- **Microcopy:** Thematic alerts ("Haunted infrastructure detected across dossiers", "6 specialized analytical spirits assembled").
-- **Accessibility Invariants:** Mandatory WCAG AA contrast compliance ($\ge 4.5:1$) and strict enforcement of `@media (prefers-reduced-motion: reduce)`.
-
----
-
-## 5. Model Context Protocol (MCP) (`.kiro/settings/mcp.json`)
-
-PhantomTrace provides a standard Kiro MCP configuration enabling AI coding agents to securely access external system context:
-- **`postgres` Server:** Standard PostgreSQL MCP server connecting via `${DATABASE_URL}` with read-only inspection access to verify Flyway migrations (V1–V10) and multi-tenant schema isolation.
-- **`github` Server:** GitHub MCP server using `${GITHUB_TOKEN}` to inspect PRs, issues, and workflow execution.
-- **Security Boundaries:** Both servers default to `autoApprove: []`, requiring explicit human confirmation before executing any tool actions, with zero credentials hardcoded in the repository.
-
-See [MCP Usage Guide](file:///Users/samiralam/project/hackathon/docs/MCP_USAGE.md) for full architecture details.
-
----
-
-## 6. Property-Based Testing Invariants (`jqwik`)
-
-Using Kiro's `test-writer` agent, we introduced 4 comprehensive property-based test suites to stress-test Spring Boot backend invariants with 4,000+ randomized inputs:
-1. **`SecurityManagerPbt`:** Verifies input sanitization length clamping ($\le 24,000$ chars), null-byte stripping, and markdown code fence neutralization.
-2. **`SyntheticIndicatorDetectorPbt`:** Verifies RFC 5737 TEST-NET (1, 2, 3) address recognition across all $256^2$ address spaces and RFC 2606 test TLDs.
-3. **`DeterministicExtractionServicePbt`:** Fuzzes arbitrary inputs to prove that deterministic indicator extraction never throws unhandled exceptions.
-4. **`RiskAssessmentPbt`:** Mathematically proves risk scores are strictly clamped to $[0, 100]$ across arbitrary signal permutations. **This PBT suite caught an actual boundary vulnerability** where raw signal combinations could produce negative risk scores, which was immediately corrected with mathematical clamping.
-
-See [Property-Based Testing Findings](file:///Users/samiralam/project/hackathon/docs/PBT_FINDINGS.md) for full test metrics and details.
-
----
-
-## 7. Kiro Powers Disclosure
-
-- **Kiro Powers:** **Not used.**
-  *(In accordance with hackathon rules requiring complete accuracy and zero unsubstantiated claims, Kiro Powers were evaluated but not incorporated into this codebase, as the project relied instead on Kiro Agent Hooks, Custom Agents, Steering, and MCP configuration.)*
-
+The workspace declares PostgreSQL and GitHub MCP servers for optional development use. The audit verified the configuration files. Connection tests and MCP tool calls were outside the verified walkthrough. The recorded Kiro workflow uses the IDE. Kiro Powers, Web, and Crew are outside the documented workflow. [MCP configuration](../.kiro/settings/mcp.json)

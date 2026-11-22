@@ -47,13 +47,26 @@ const safeJson = (value) => {
   }
 };
 
+const verificationLabels = {
+  VERIFIED: 'Verified',
+  EXTERNAL: 'Verified by external source',
+  EXTERNAL_VERIFIED: 'Verified by external source',
+  EXTERNALLY_VERIFIED: 'Verified by external source',
+  VERIFIED_BY_EXTERNAL_SOURCE: 'Verified by external source',
+  EXTRACTED: 'Extracted from submitted evidence',
+  DIRECTLY_EXTRACTED: 'Extracted from submitted evidence',
+  AI: 'AI assessment',
+  AI_ASSESSMENT: 'AI assessment',
+  AI_INFERENCE: 'AI assessment',
+  AI_SUGGESTED: 'AI assessment',
+  NOT_VERIFIED: 'Unverified',
+  NOT_EXTERNALLY_VERIFIED: 'Unverified',
+  UNVERIFIED: 'Unverified',
+};
+
 const findingVerification = (finding) => {
-  const value = String(finding?.verificationStatus || '').toUpperCase();
-  if (value.includes('EXTERNAL') || value.includes('VERIFIED')) return 'Verified by external source';
-  if (value.includes('EXTRACT')) return 'Extracted from submitted evidence';
-  if (value.includes('AI')) return 'AI assessment';
-  if (value.includes('UNVERIFIED')) return 'Unverified';
-  return 'Unknown';
+  const status = String(finding?.verificationStatus ?? '').trim().toUpperCase().replace(/[\s-]+/g, '_');
+  return verificationLabels[status] ?? 'Unknown';
 };
 
 const FindingCard = ({ finding }) => (

@@ -56,7 +56,7 @@
 | Technology | Details |
 |---|---|
 | Provider | Groq Cloud |
-| Model | `llama-3.3-70b-versatile` |
+| Model | `openai/gpt-oss-120b` |
 | Protocol | HTTPS REST (Groq Chat Completions API) |
 | Auth | `GROQ_API_KEY` environment variable (backend-only) |
 | Output contract | All LLM responses labelled `AI_INFERENCE`; parsed by `StructuredAiResponseParser` |

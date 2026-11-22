@@ -88,6 +88,17 @@ class AiPromptEvidenceFieldsTest {
         verify(provider).complete(captor.capture());
         AiCompletionRequest capturedRequest = captor.getValue();
 
+        String systemPrompt = capturedRequest.messages().getFirst().content();
+        assertThat(capturedRequest.messages().getFirst().role()).isEqualTo("system");
+        assertThat(capturedRequest.responseFormat()).containsEntry("type", "json_object");
+        assertThat(systemPrompt)
+                .contains("agentName", "exactly \"INVESTIGATION_REPORT\"", "findings", "indicators", "summary",
+                        "limitations", "title", "description", "verificationStatus", "evidenceReference",
+                        "explanation", "recommendedAction", "sourceType", "severity", "confidence", "type", "value",
+                        "basis", "[LOW, MEDIUM, HIGH, CRITICAL, UNKNOWN]", "number from 0 to 1", "AI_INFERENCE",
+                        "UNKNOWN", "no extra keys", "empty arrays")
+                .doesNotContain(textContent, emailBody);
+
         String userPrompt = capturedRequest.messages().stream()
                 .filter(m -> "user".equals(m.role()))
                 .map(AiCompletionRequest.Message::content)

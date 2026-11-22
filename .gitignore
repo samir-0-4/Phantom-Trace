@@ -55,6 +55,7 @@ logs/
 *.mp4
 *.m4a
 *.aiff
+/video/raw/
 video_production/
 
 # Docker
