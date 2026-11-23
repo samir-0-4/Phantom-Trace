@@ -10,7 +10,7 @@ PhantomTrace is a browser-based investigation workspace for security analysts an
 4. In the SMS case, choose **View Results**, then **Run analysis** or **Refresh analysis**. Read the external AI disclosure and choose **I understand, continue** if you want the fictional evidence sent to the configured provider. Review agent outcomes and any `AI_INFERENCE` findings returned. If analysis is unavailable, continue with the deterministic evidence and campaign views.
 5. From the case select **Report**, or use **Audit Report** from the campaign view. Select **Generate report** or **Regenerate report**. The saved dossier displays evidence, interpretations, and availability or verification status. Select **Print / Save PDF** for the browser's print view.
 
-The last recorded production run verified registration, case and evidence creation, campaign seeding, graph exploration, campaign reconstruction, and report generation. The AI request reached the service, but the upstream provider returned HTTP 404. The repair completed four agents on a separate local build using the live provider. Observe the deployed AI result independently during review. [Production recording and remediation audit](../video/PRODUCTION_REPORT.md)
+The 22 November production check completed all four agents selected for the fictional case and displayed 11 `AI_INFERENCE` findings. It refreshed the risk assessment and saved a report containing all four new executions. The report's SHA-256 digest matched an independent calculation. Outputs can vary between analysis runs. [Production verification](../video/PRODUCTION_REPORT.md)
 
 ## Try evidence intake
 

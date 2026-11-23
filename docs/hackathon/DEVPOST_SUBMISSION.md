@@ -38,4 +38,4 @@ The trusted IDE registered seven hook definitions, including Java tests on save 
 
 ## Before entering the draft
 
-Verify the production AI workflow from a clean test account. The last recorded production run received an upstream HTTP 404. The corrected model and response handling completed four agents in a separate local test. Verify stable judge access, GitHub license detection, and the public video link before submission. [Remediation audit](../../video/PRODUCTION_REPORT.md) · [Rules checklist](rules-verification.md)
+The 22 November production browser check verified four completed AI agents, `AI_INFERENCE` findings, risk refresh, and the saved dossier on the updated Render backend. Vercel and Render now run `9dfa16a`, and GitHub recognizes Apache-2.0 on public `main`. Confirm that judge access will continue beyond the current database's 14 December expiry. Add the public video link after approval and publication. [Production verification](../../video/PRODUCTION_REPORT.md) · [Rules checklist](rules-verification.md)

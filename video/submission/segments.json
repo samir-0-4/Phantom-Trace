@@ -1,0 +1,148 @@
+{
+  "title": "PhantomTrace",
+  "edition": "KIROWEEN 2026  /  FRANKENSTEIN",
+  "chapters": [
+    {
+      "id": "intro", "label": "Investigating scam campaigns", "sourceLabel": "Production app", "seconds": 8,
+      "cues": [
+        {"seconds": 4, "text": "One suspicious message can be part of a larger scam campaign."},
+        {"seconds": 4, "text": "PhantomTrace gives analysts one place to follow the evidence."}
+      ],
+      "clips": [
+        {"source": "../raw/00-landing-registration.webm", "in": 0.17, "out": 5.07, "seconds": 8, "crop": [0.16, 0.065, 0.385, 0.62]}
+      ]
+    },
+    {
+      "id": "auth", "label": "Register and sign in", "sourceLabel": "Production app", "seconds": 16,
+      "cues": [
+        {"seconds": 7, "text": "A dedicated demo account keeps the walkthrough separate from real investigations."},
+        {"seconds": 9, "text": "The analyst signs in and opens their investigation workspace."}
+      ],
+      "clips": [
+        {"source": "../raw/00-landing-registration.webm", "in": 6.62, "out": 10.04, "seconds": 7, "hold": true, "crop": [0.28, 0.14, 0.44, 0.62]},
+        {"source": "../raw/01-sign-in.webm", "in": 0.2, "out": 5.05, "seconds": 5, "crop": [0.28, 0.14, 0.44, 0.62]},
+        {"source": "../raw/02-investigation.webm", "in": 0.15, "out": 3.6, "seconds": 4, "crop": [0.12, 0, 0.86, 0.97]}
+      ]
+    },
+    {
+      "id": "investigation", "label": "Build an investigation", "sourceLabel": "Production · Synthetic evidence", "seconds": 24,
+      "cues": [
+        {"seconds": 10, "text": "The analyst starts a case for a fictional suspicious message."},
+        {"seconds": 7, "text": "They submit the sample message and its context as evidence."},
+        {"seconds": 7, "text": "The message is now part of the investigation."}
+      ],
+      "clips": [
+        {"source": "../raw/02-investigation.webm", "in": 3.6, "out": 14.75, "seconds": 10, "crop": [0.12, 0, 0.86, 0.97]},
+        {"source": "../raw/03-evidence-intake.webm", "in": 4.8, "out": 9.78, "seconds": 7, "crop": [0.283, 0.09, 0.59, 0.643]},
+        {"source": "../raw/03-evidence-intake.webm", "in": 10.9, "out": 16.45, "seconds": 7, "crop": [0.606, 0.181, 0.264, 0.338]}
+      ]
+    },
+    {
+      "id": "production-analysis", "label": "Analyze the evidence", "sourceLabel": "Production · Synthetic evidence", "seconds": 22,
+      "cues": [
+        {"seconds": 5, "text": "The built-in dataset supplies three plainly labeled synthetic cases."},
+        {"seconds": 7, "text": "PhantomTrace asks for consent before sending the synthetic evidence to the live AI service."},
+        {"seconds": 10, "text": "Four agents complete and return eleven findings on this fixture. The findings are labeled AI assessments."}
+      ],
+      "clips": [
+        {"source": "../raw/04-load-synthetic-campaign.webm", "in": 4.68, "out": 13.35, "seconds": 5, "crop": [0.12, 0, 0.86, 0.97]},
+        {"source": "../raw/production-ai-success.webm", "in": 9.80, "out": 14.82, "seconds": 5.5, "crop": [0.31, 0.31, 0.38, 0.40], "redactions": [[0.429, 0.480, 0.020, 0.023]]},
+        {"source": "../raw/production-ai-success.webm", "in": 15.08, "out": 16.82, "seconds": 1.5, "crop": [0.25, 0.078, 0.63, 0.34]},
+        {"source": "../raw/production-ai-success.webm", "in": 33.23, "out": 36.92, "seconds": 3.5, "crop": [0.25, 0.078, 0.63, 0.248]},
+        {"source": "../raw/production-ai-success.webm", "in": 37.80, "out": 45.68, "seconds": 6.5, "crop": [0.255, 0.465, 0.63, 0.52]}
+      ]
+    },
+    {
+      "id": "graph", "label": "Trace the evidence graph", "sourceLabel": "Production · Synthetic evidence", "seconds": 17,
+      "cues": [
+        {"seconds": 8, "text": "The graph connects a related demo case to its email evidence."},
+        {"seconds": 9, "text": "Selecting the email node reveals its source evidence and relationship."}
+      ],
+      "clips": [
+        {"source": "../raw/06-evidence-graph.webm", "in": 1.85, "out": 6.73, "seconds": 8, "crop": [0.12, 0, 0.86, 0.97]},
+        {"source": "../raw/06-evidence-graph.webm", "in": 6.73, "out": 15.42, "seconds": 9, "crop": [0.14, 0.04, 0.85, 0.89]}
+      ]
+    },
+    {
+      "id": "campaign", "label": "Reconstruct the campaign", "sourceLabel": "Production · Synthetic campaign", "seconds": 20,
+      "cues": [
+        {"seconds": 10, "text": "The synthetic campaign spans a text alert, an email, and a call transcript."},
+        {"seconds": 10, "text": "Two shared test indicators connect separate cases. The result is labeled synthetic."}
+      ],
+      "clips": [
+        {"source": "../raw/07-campaign-reconstruction.webm", "in": 2.05, "out": 11.85, "seconds": 10, "crop": [0.12, 0, 0.86, 0.97]},
+        {"source": "../raw/07-campaign-reconstruction.webm", "in": 11.9, "out": 19.05, "seconds": 10, "crop": [0.12, 0, 0.86, 0.97]}
+      ]
+    },
+    {
+      "id": "report", "label": "Generate the report", "sourceLabel": "Production · Synthetic evidence", "seconds": 16,
+      "cues": [
+        {"seconds": 7, "text": "PhantomTrace generates a fresh report from the analyzed synthetic case."},
+        {"seconds": 9, "text": "The printable dossier keeps verified evidence, AI inference, and unknowns distinct."}
+      ],
+      "clips": [
+        {"source": "../raw/production-refreshed-report.webm", "in": 3.33, "out": 8.55, "seconds": 7, "crop": [0.27, 0.092, 0.59, 0.338]},
+        {"source": "../raw/production-refreshed-report.webm", "in": 8.57, "out": 17.97, "seconds": 9, "crop": [0.288, 0.102, 0.553, 0.324]}
+      ]
+    },
+    {
+      "id": "kiro-workspace", "label": "The PhantomTrace workspace", "sourceLabel": "Kiro IDE", "seconds": 6,
+      "cues": [
+        {"seconds": 6, "text": "The project workspace organizes its application code and Kiro configuration."}
+      ],
+      "clips": [
+        {"source": "../raw/kiro-workspace-specs.mov", "in": 0.22, "out": 4.8, "seconds": 6, "crop": [0, 0.01, 0.201, 0.41], "redactions": [[0.036, 0.127, 0.061, 0.024]]}
+      ]
+    },
+    {
+      "id": "kiro-specs", "label": "Specifications", "sourceLabel": "Kiro IDE", "seconds": 8,
+      "cues": [
+        {"seconds": 8, "text": "Kiro’s campaign spec defines requirements, a technical design, and implementation tasks for cross-case correlation."}
+      ],
+      "clips": [
+        {"source": "../raw/kiro-workspace-specs.mov", "in": 5.72, "out": 8.69, "seconds": 3, "crop": [0.20, 0.02, 0.79, 0.63]},
+        {"source": "../raw/kiro-workspace-specs.mov", "in": 10.86, "out": 13.55, "seconds": 2.7, "crop": [0.20, 0.02, 0.79, 0.445]},
+        {"source": "../raw/kiro-workspace-specs.mov", "in": 16.19, "out": 17.78, "seconds": 2.3, "hold": true, "crop": [0.20, 0.02, 0.79, 0.56]}
+      ]
+    },
+    {
+      "id": "kiro-steering", "label": "Steering", "sourceLabel": "Kiro IDE", "seconds": 8,
+      "cues": [
+        {"seconds": 8, "text": "The steering file sets the Frankenstein theme and keeps verified evidence, AI inference, and unknowns distinct."}
+      ],
+      "clips": [
+        {"source": "../raw/kiro-steering-agents.mov", "in": 0.08, "out": 0.96, "seconds": 8, "hold": true, "crop": [0.197, 0.01, 0.80, 0.952]}
+      ]
+    },
+    {
+      "id": "kiro-agents", "label": "Custom agent definitions", "sourceLabel": "Kiro IDE", "seconds": 7,
+      "cues": [
+        {"seconds": 7, "text": "The Threat Analyst and Test Writer definitions specify evidence review and testing roles."}
+      ],
+      "clips": [
+        {"source": "../raw/kiro-steering-agents.mov", "in": 2.24, "out": 5.27, "seconds": 3.5, "crop": [0.198, 0.016, 0.80, 0.428]},
+        {"source": "../raw/kiro-steering-agents.mov", "in": 11.60, "out": 14.64, "seconds": 3.5, "crop": [0.198, 0.016, 0.80, 0.30]}
+      ]
+    },
+    {
+      "id": "kiro-hooks", "label": "Registered hooks", "sourceLabel": "Kiro IDE · Restricted Mode", "seconds": 8,
+      "cues": [
+        {"seconds": 8, "text": "Kiro lists the project hooks and shows how the backend test-on-save check is configured."}
+      ],
+      "clips": [
+        {"source": "../raw/kiro-hooks.mov", "in": 0.24, "out": 4.24, "seconds": 4, "crop": [0, 0, 0.61, 0.39]},
+        {"source": "../raw/kiro-hooks.mov", "in": 4.40, "out": 8.40, "seconds": 4, "crop": [0.19, 0.014, 0.76, 0.56]}
+      ]
+    },
+    {
+      "id": "outro", "label": "The Frankenstein category", "sourceLabel": "Production · Synthetic campaign", "seconds": 10,
+      "cues": [
+        {"seconds": 5, "text": "Deterministic extraction, AI analysis, and graph correlation each answer a different question."},
+        {"seconds": 5, "text": "PhantomTrace stitches them together so analysts can trace patterns across cases."}
+      ],
+      "clips": [
+        {"source": "../raw/07-campaign-reconstruction.webm", "in": 13.05, "out": 19.05, "seconds": 10, "hold": true, "crop": [0.12, 0, 0.86, 0.97]}
+      ]
+    }
+  ]
+}
