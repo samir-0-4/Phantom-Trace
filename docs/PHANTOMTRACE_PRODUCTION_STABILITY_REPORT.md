@@ -171,7 +171,8 @@ If desired, the service can be set to persistent execution directly in the Rende
 4. Change from **Free** to **Starter** ($7/month).
 5. Click **Save Changes**. Starter instances run 24/7 with zero spin-downs and zero cold starts.
 
-### Option C: Database 30-Day Renewal Notice
-1. In the Render Dashboard, check **`phantomtrace-db`**.
-2. If Render displays a renewal banner ("Database expires in X days"), click **Renew Database**.
-3. If the database ever expires, Flyway automatically recreates all schemas V1–V10 upon backend startup, and 1-click seeding on the UI restores the 3 demo cases.
+### Option C — Plan for the database expiry
+
+Render Free PostgreSQL expires 30 days after creation. The database becomes inaccessible at expiry. Render allows 14 more days to move it to a paid plan before deleting it and its data. [Render Free PostgreSQL limits](https://render.com/docs/free#30-day-limit)
+
+For uninterrupted service, migrate the data or upgrade the database before expiry. Flyway initializes the schema for a new database, and demo seeding recreates the fictional cases. Preserving existing records requires a database transfer or restore. [Current deployment notes](DEPLOYMENT_NOTES.md)

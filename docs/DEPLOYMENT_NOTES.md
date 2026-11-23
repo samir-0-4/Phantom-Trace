@@ -1,6 +1,6 @@
 # PhantomTrace deployment and judge access
 
-The production frontend runs on Vercel. The Spring Boot backend and PostgreSQL database run on Render. The repository includes a Render Blueprint and the application setup instructions. [Frontend](https://phantomtrace04.vercel.app) · [Backend health](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health) · [Render Blueprint](../render.yaml) · [Local setup](../README.md)
+Vercel hosts the frontend, Render hosts the Spring Boot backend, and Neon hosts the production PostgreSQL database. The backend connects through Render's `DATABASE_URL` secret. [Frontend](https://phantomtrace04.vercel.app) · [Backend health](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health) · [Render Blueprint](../render.yaml) · [Local setup](../README.md)
 
 ## Verified production release
 
@@ -19,11 +19,20 @@ curl --fail --silent --show-error --max-time 90 \
   https://phantomtrace-backend-vhxt.onrender.com/api/v1/health
 ```
 
+## PostgreSQL cutover verification
+
+On 23 November 2026, the copy to Neon PostgreSQL 18 Free in Oregon was verified before cutover. Checks covered 12 tables and 624 rows, including comparison of the 10 Flyway history entries. Full application-row fingerprints matched the Render source. The Neon branch had no expiry configured. A connection check with the application's pgJDBC 42.7.5 verified the TLS certificate and server hostname. [Production verification](../video/PRODUCTION_REPORT.md)
+
+Render deployment `dep-dc27dqgn74is73897j1g` went live at **10:57:23 p.m. IST on 23 November** with the same application revision, `9dfa16a`. Startup logs confirmed the Neon JDBC target. Repeated comparisons before and after cutover found that both databases matched the 12-table, 624-row baseline, including all 10 Flyway entries. These checks ran without pausing writes. The Render source remained available with unchanged rows. [Production verification](../video/PRODUCTION_REPORT.md)
+
+Two post-cutover Playwright checks passed. The restored account signed in and loaded the original SMS case with four saved runs, 11 AI assessments, and its dossier. A new analysis of the seeded email case completed all four agents, returned eight `AI_INFERENCE` findings from source `AI`, refreshed risk, and saved a new report containing the four new executions. Independent SHA-256 calculations matched both dossiers. [Post-cutover browser results](../video/PRODUCTION_REPORT.md#23-november-database-cutover-check)
+
+For new Blueprint provisioning, supply the external PostgreSQL connection as `DATABASE_URL` in Render. The local Blueprint's `sync: false` setting preserves manual secret configuration on an existing service. Configure the secret and deploy through Render when changing its value. The former Render database is managed separately after the Blueprint change is synced. [Render secret configuration](https://render.com/docs/blueprint-spec#prompting-for-secret-values) · [Render resource retention](https://render.com/docs/infrastructure-as-code#deleting-resources)
+
 ## Keep judge access available
 
-The rules require free testing and evaluation for judges through **29 January 2027 at 1:00 p.m. Pacific time**, which is **30 January at 2:30 a.m. IST**. On 22 November, Render showed PhantomTrace still using `phantomtrace-db` on the free plan with expiry on **14 December 2026 at 3:02 p.m. IST**, before judging starts. Database continuity remains open. Keep its connection configured only on the Render backend. [Official testing requirement](https://kiroween.devpost.com/rules)
+The rules require free testing and evaluation for judges through **29 January 2027 at 1:00 p.m. Pacific time**, which is **30 January at 2:30 a.m. IST**. The original Render source `phantomtrace-db` is scheduled to expire on **14 December 2026 at 3:02 p.m. IST**. That date applies to the Render source. [Official testing requirement](https://kiroween.devpost.com/rules) · [Render free plan limits](https://render.com/docs/free#free-postgres)
 
-- Render's free PostgreSQL expires after 30 days. Its 14-day grace period allows conversion to a paid compute plan after expiry. If the current database expires during the required period, arrange a durable database plan or migrate to another database, then verify judge access against the new connection before expiry. An uptime check cannot extend the database lifetime. [Render free plan limits](https://render.com/docs/free#free-postgres)
-- Render free web services can spin down after 15 minutes without traffic. A cold request can take around a minute. Document that wait in judge instructions and check the workspace's running-hour quota if using a monitor. [Render free web service limits](https://render.com/docs/free#free-web-services)
+- Render free web services can spin down after 15 minutes without traffic. A cold request can take around a minute. Neon Free suspends idle compute after five minutes and applies monthly compute and network transfer limits and a storage cap. Check service usage through judging. The backend health endpoint queries PostgreSQL, so frequent monitoring requests can keep the database awake and consume compute allowance. [Render free web service limits](https://render.com/docs/free#free-web-services) · [Neon Free limits](https://neon.com/docs/introduction/plans)
 - The demo uses text evidence and the built-in fictional campaign. If reviewers will upload files that must survive a restart or redeploy, verify persistent storage for the actual deployment. A free Render web service does not support persistent disks. [Render storage limits](https://render.com/docs/free#free-web-services)
 - After any change, test registration or the designated judge access route, seeding, graph selection, campaign results, AI completion, and reporting. Keep any required judge credentials in the private Devpost testing field. [Judge walkthrough](JUDGE_GUIDE.md)

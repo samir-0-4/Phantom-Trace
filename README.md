@@ -7,7 +7,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18-blue.svg)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6-purple.svg)](https://vitejs.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
+[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue.svg)](https://www.postgresql.org/)
 [![Vercel Frontend](https://img.shields.io/badge/Vercel-Frontend%20Live-black.svg?logo=vercel)](https://phantomtrace04.vercel.app)
 [![Render Backend](https://img.shields.io/badge/Render-Backend%20Health-46E3B7.svg?logo=render)](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health)
 [![Backend Tests](https://img.shields.io/badge/Backend%20Tests-225%2F225%20Passing-brightgreen.svg)]()
@@ -254,7 +254,7 @@ flowchart LR
     end
 
     subgraph Data["Data & Intelligence Storage"]
-        PG[("PostgreSQL 16\nFlyway Migrations V1–V10")]
+        PG[("PostgreSQL\nFlyway Migrations V1–V10")]
         FS[("Secure Local Storage\n(25 MB Limit, No Exec)")]
     end
 
@@ -435,7 +435,7 @@ Backend:
 └── Unit Testing: JUnit 5, Mockito, Spring MockRestServiceServer
 
 Database & Infrastructure:
-├── Database: PostgreSQL 16
+├── Database: PostgreSQL (16 for local Docker)
 └── Containerization: Docker & Docker Compose
 ```
 
@@ -444,10 +444,12 @@ Database & Infrastructure:
 ## Installation & Setup
 
 ### Live Hosted Deployment
-The platform is deployed and fully operational for evaluation without local configuration:
+Use the hosted app to evaluate PhantomTrace without local setup. [Deployment status and judge access](docs/DEPLOYMENT_NOTES.md)
+
 - **Web Application (Vercel):** [https://phantomtrace04.vercel.app](https://phantomtrace04.vercel.app)
 - **Backend API (Render):** [https://phantomtrace-backend-vhxt.onrender.com](https://phantomtrace-backend-vhxt.onrender.com)
 - **Health Check:** [`https://phantomtrace-backend-vhxt.onrender.com/api/v1/health`](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health)
+- **Production database** Neon PostgreSQL 18. [Cutover verification](docs/DEPLOYMENT_NOTES.md#postgresql-cutover-verification)
 
 ### Local Development Prerequisites
 - **Node.js** v20+ & **npm** v10+
@@ -595,7 +597,7 @@ To preserve technical credibility under adversarial forensic scrutiny:
 6. **JWT Storage in Browser LocalStorage:** The Single-Page Application (SPA) frontend stores authentication JWT tokens in browser `localStorage`. While standard for lightweight SPA architectures, this storage model is susceptible to token exfiltration if Cross-Site Scripting (XSS) occurs. Production enterprise deployments should transition to `HttpOnly` Secure SameSite cookies with CSRF token protection.
 7. **In-Memory Rate Limiting:** The Bucket4j token bucket rate limiter maintains IP request counters in local JVM heap memory. While effective for single-instance deployments, rate limit states reset when the service restarts and do not synchronize across horizontally scaled multi-node clusters without an external distributed store like Redis.
 8. **Render Free Ephemeral Filesystem Storage:** Uploaded files default to local filesystem storage (`/app/uploads` or `/tmp`). On containerized cloud platforms like Render's free tier without persistent disk mounts, uploaded files are ephemeral and reset during application redeployments or restarts. Production deployments must configure persistent cloud block storage or S3-compatible object storage.
-9. **Render Free PostgreSQL Retention Policy:** Free Render PostgreSQL expires 30 days after creation. Verify the active database plan and expiry, and preserve judge access through the judging period.
+9. **Hosted PostgreSQL availability.** Follow the deployment notes for the active database, free-plan limits, and judge access. [Deployment notes](docs/DEPLOYMENT_NOTES.md)
 10. **No Raw WHOIS / RDAP Queries:** Domain age, registrant names, and ASN details are not queried via raw sockets to maintain server isolation and prevent network egress exposure.
 11. **IPv6 Indicator Extraction Pipeline:** The deterministic extraction pipeline (`DeterministicExtractionService`) currently targets IPv4 addresses (`IP_ADDRESS`). IPv6 indicators—including documentation ranges such as RFC 3849 (`2001:db8::/32`)—are not parsed by the regular expression pipeline. Synthetic indicator detection for RFC 5737 TEST-NET ranges strictly targets IPv4.
 

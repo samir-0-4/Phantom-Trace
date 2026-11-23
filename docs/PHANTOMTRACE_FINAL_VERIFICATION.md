@@ -133,7 +133,7 @@ bash .kiro/hooks/pre-commit-check.sh — Passed
 
 ### Known Infrastructure Limitations:
 - **Render Cold Starts:** Inactivity over 15 minutes causes the backend container to sleep; the first request takes 30–50 seconds to boot.
-- **Render PostgreSQL 30-Day Expiry:** Free-tier database requires manual renewal every 30 days in the Render dashboard. Flyway migrations V1–V10 automatically rebuild schemas on any new instance.
+- **Render PostgreSQL expiry.** Free databases become inaccessible 30 days after creation. Render allows 14 more days for a paid upgrade before deletion. Plan a migration or upgrade before expiry. Flyway can rebuild the schema on a fresh database. Preserve existing records through a data transfer or restore. [Render limits](https://render.com/docs/free#30-day-limit) · [Current deployment notes](DEPLOYMENT_NOTES.md)
 
 ---
 
