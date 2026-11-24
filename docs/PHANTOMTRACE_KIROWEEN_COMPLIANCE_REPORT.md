@@ -7,7 +7,7 @@
 **Live Frontend:** https://phantomtrace04.vercel.app  
 **Live Backend:** https://phantomtrace-backend-vhxt.onrender.com  
 
-This audit records the earlier review. Use the [current rules verification](hackathon/rules-verification.md) and [production audit](../video/PRODUCTION_REPORT.md) for submission decisions.
+This audit records the earlier review. Use the [current rules verification](hackathon/rules-verification.md) and [production stability report](PHANTOMTRACE_PRODUCTION_STABILITY_REPORT.md) for submission decisions.
 
 ---
 
@@ -22,7 +22,7 @@ This audit records the earlier review. Use the [current rules verification](hack
 | 5 | **`.kiro/` files tracked by Git** | **VERIFY FINAL BRANCH** | The root directory is tracked and `.gitignore` explicitly includes `!.kiro/` and `!.kiro/**`. Verify the final hook and profile files on the public default branch. |
 | 6 | **Recognized open-source license** | **VERIFY ON GITHUB** | The earlier public Apache-style file was abbreviated. Confirm GitHub About recognizes the final license after publication. |
 | 7 | **Functional Application Live URL** | **PASS** | Frontend is live at `https://phantomtrace04.vercel.app`, routing to backend API at `https://phantomtrace-backend-vhxt.onrender.com/api/v1`. |
-| 8 | **Public YouTube demo video under three minutes** | **PENDING** | The 2:50 local draft is documented in the [production report](../video/PRODUCTION_REPORT.md). Enter the publicly visible YouTube URL in Devpost after the public release is approved. |
+| 8 | **Public YouTube demo video under three minutes** | **PENDING** | The 2:50 local draft is documented in local production records. Enter the publicly visible YouTube URL in Devpost after the public release is approved. |
 | 9 | **Project Description & Narrative** | **PASS** | Comprehensive problem statement, forensic architecture, truth framework, and UI gallery documented in `README.md`. |
 | 10 | **Kiro Usage Write-Up & Proof** | **PASS** | Comprehensive Kiro documentation in `docs/KIRO_USAGE.md` detailing specs, hooks, custom agents, MCP configs, steering, and property-based testing. |
 | 11 | **Hackathon Category Fit (Frankenstein)** | **PASS** | Perfectly embodies Frankenstein: combining deterministic cryptographic parsers, regex extractors, graph algorithms, and six concurrent generative LLM agents into a unified, self-contained cyber forensic platform. |
@@ -69,7 +69,7 @@ The repository contains 35+ tracked Kiro artifacts:
 - Both `/api/v1/health` and `/actuator/health` are bridged and accessible without authentication.
 
 ### Requirement 8 — Demo video status
-- The 2:50 original draft and its capture limitations are documented in the [production report](../video/PRODUCTION_REPORT.md).
+- The 2:50 original draft and its capture limitations are documented in local production records.
 - Public release requires publication clearance for the narration and other materials, then a publicly visible YouTube link in Devpost. [Official rules](https://kiroween.devpost.com/rules)
 
 ---

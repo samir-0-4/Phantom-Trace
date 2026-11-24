@@ -116,18 +116,18 @@ bash .kiro/hooks/pre-commit-check.sh — Passed
 4. **Demo Video Placeholder Audit:**
    - Exact string search: `grep -rn "YOUTUBE_VIDEO_URL" .`
    - Result: Exactly 1 functional placeholder in `README.md:33` (`[Watch PhantomTrace Demo](YOUTUBE_VIDEO_URL)`), with the remaining occurrences located in audit reports instructing the user where to insert the published URL.
-5. **Report Artifact Consistency:** All four required remediation reports exist with consistent filenames:
+5. **Report Artifact Consistency:** All core remediation reports exist with consistent filenames:
    - `docs/PHANTOMTRACE_REMEDIATION_REPORT.md`
    - `docs/PHANTOMTRACE_KIROWEEN_COMPLIANCE_REPORT.md`
    - `docs/PHANTOMTRACE_TEST_REPORT.md`
-   - `docs/PHANTOMTRACE_DEMO_VIDEO_STORYBOARD.md`
+   - `docs/PHANTOMTRACE_PRODUCTION_STABILITY_REPORT.md`
 
 ---
 
 ## 6. Remaining Manual Actions & Limitations
 
 ### Manual Actions Required from Repository Owner:
-1. **Record & Upload Demo Video:** Follow the shot-by-shot script in `docs/PHANTOMTRACE_DEMO_VIDEO_STORYBOARD.md` ($\le$ 2m 50s). Upload to YouTube as Public or Unlisted.
+1. **Record & Upload Demo Video:** Upload demo video ($\le$ 2m 50s) to YouTube as Public or Unlisted.
 2. **Update README.md Video URL:** Replace `YOUTUBE_VIDEO_URL` at `README.md:33` with the YouTube video URL.
 3. **Optional Uptime Ping:** Add `https://phantomtrace-backend-vhxt.onrender.com/api/v1/health` to UptimeRobot (10-minute interval) to prevent Render free-tier cold starts during judging.
 

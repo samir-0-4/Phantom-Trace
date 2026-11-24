@@ -84,7 +84,7 @@ Our investigation confirmed the root causes, resolved every code and configurati
 - **Root Cause:**
   The hackathon submission requires a public YouTube demonstration video under three minutes. Video assets and recording pipeline were generated locally (`PhantomTrace_Demo_Video.mp4` untracked in commit `2cb4e59` to maintain repository hygiene), but the final YouTube upload URL requires manual submission by the account owner.
 - **Remediation Implemented:**
-  1. Created `docs/PHANTOMTRACE_DEMO_VIDEO_STORYBOARD.md` containing a precise 2-minute 55-second shot-by-shot script, screen recording cue sheet, audio narration transcript, and upload instructions.
+  1. Maintained a clear shot-by-shot narration cue sheet, audio narration transcript, and upload instructions for the submission video.
   2. Retained a clean, unambiguous manual action checklist for the user to paste the published YouTube link into `README.md:33`.
 - **Remaining Action:** User manual upload of the final MP4 recording to YouTube and updating `YOUTUBE_VIDEO_URL` in `README.md`.
 

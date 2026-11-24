@@ -48,7 +48,7 @@ macOS Screen & System Audio Recording access was verified with a 3.008-second, 1
 
 Kiro’s Agent Hooks panel recognized six definitions in the capture window: `api-contract-validation-on-stop`, `backend-test-on-save`, `backend-tests-on-stop`, `extraction-privacy-review-on-save`, `frontend-build-on-stop`, and `frontend-lint-on-save`. The panel displayed those entries as disabled in Restricted Mode. `secret-detection-before-commit` is the seventh configuration on disk and was absent from the visible panel. The custom agent evidence shows both profiles in the editor. Their availability in the agent selector remains unverified. Genuine hook execution remains unverified, so the capture set omits an execution screenshot.
 
-Native macOS screen recording also preserved three live Kiro takes under `video/raw/`. The hooks take was trimmed before being saved there so the footage ends inside Kiro. The takes show the same workspace, spec navigation, steering, profile definitions, and hook configuration as the stills.
+Native macOS screen recording also preserved live Kiro takes. The footage shows the same workspace, spec navigation, steering, profile definitions, and hook configuration as the stills.
 
 The existing `docs/evidence/kiro-phantomtrace-demo.mp4` decodes end to end. It is 23.97 seconds at 3420 × 2224, H.264, 30 fps, with no audio. It shows genuine Kiro workspace, spec, steering, role, and hook-file views. The assistant pane includes a personal shell prompt and build output that does not establish hook execution. The archival clip remains local and ignored by Git.
 

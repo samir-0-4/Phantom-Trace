@@ -38,4 +38,4 @@ The trusted IDE registered seven hook definitions, including Java tests on save 
 
 ## Before entering the draft
 
-Production switched to Neon on 23 November. The post-cutover browser checks verified access to a restored synthetic case and its original dossier. They also verified fresh AI analysis, risk refresh, and report generation on a seeded email case. The 14 December expiry applies to the former Render database. GitHub recognizes Apache-2.0 on public `main`. Add the public video link after approval and publication. [Production verification](../../video/PRODUCTION_REPORT.md) · [Rules checklist](rules-verification.md)
+Production switched to Neon on 23 November. The post-cutover browser checks verified access to a restored synthetic case and its original dossier. They also verified fresh AI analysis, risk refresh, and report generation on a seeded email case. The 14 December expiry applies to the former Render database. GitHub recognizes Apache-2.0 on public `main`. Add the public video link after approval and publication. [Production verification](../PHANTOMTRACE_PRODUCTION_STABILITY_REPORT.md) · [Rules checklist](rules-verification.md)
