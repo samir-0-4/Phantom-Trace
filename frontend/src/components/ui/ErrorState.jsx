@@ -4,34 +4,24 @@ import { cn } from '../../utils/cn';
 
 export const ErrorState = ({
   title = 'Failed to load content',
-  message = 'An unexpected error occurred while communicating with the investigation engine.',
+  message = 'The server could not complete the request.',
   onRetry,
   className = '',
-}) => {
-  return (
-    <div
-      role="alert"
-      className={cn(
-        'text-center py-10 px-4 sm:px-6 space-y-3.5 rounded-2xl border border-rose-500/25 bg-[#170a11]/90 backdrop-blur-md min-w-0 shadow-[0_4px_24px_rgba(244,63,94,0.15)]',
-        className
-      )}
-    >
-      <div className="mx-auto w-12 h-12 rounded-xl bg-rose-500/15 border border-rose-500/35 flex items-center justify-center text-rose-400 shadow-sm">
-        <AlertTriangle className="w-5 h-5" aria-hidden="true" />
-      </div>
-      <div className="space-y-1">
-        <h3 className="text-sm sm:text-base font-bold text-rose-200">{title}</h3>
-        <p className="text-xs sm:text-sm text-rose-300/80 max-w-sm mx-auto leading-relaxed">{message}</p>
-      </div>
-      {onRetry && (
-        <div className="pt-2">
-          <Button variant="secondary" size="sm" onClick={onRetry} className="inline-flex items-center gap-2">
-            <RefreshCw className="w-3.5 h-3.5" /> Retry
+}) => (
+  <div role="alert" className={cn('workstation-panel border-l-2 border-l-risk-critical p-4 sm:p-5', className)}>
+    <div className="flex items-start gap-3">
+      <AlertTriangle className="mt-0.5 size-5 shrink-0 text-risk-critical" aria-hidden="true" />
+      <div className="min-w-0">
+        <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
+        <p className="mt-1 break-words text-sm text-text-secondary">{message}</p>
+        {onRetry && (
+          <Button variant="secondary" size="sm" onClick={onRetry} className="mt-3">
+            <RefreshCw className="size-4" aria-hidden="true" /> Retry
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
-  );
-};
+  </div>
+);
 
 export default ErrorState;

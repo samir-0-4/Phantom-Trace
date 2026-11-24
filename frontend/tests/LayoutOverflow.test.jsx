@@ -26,8 +26,8 @@ describe('Responsive Layout & Overflow Safeguards', () => {
     ]);
   });
 
-  it('renders EvidenceAnalysisPage with min-w-0 containers and responsive 12-col grid', async () => {
-    const { container } = render(
+  it('keeps the evidence intake and list columns shrinkable with long indicators', async () => {
+    render(
       <AuthProvider>
         <MemoryRouter initialEntries={['/investigations/case-demo/analysis']}>
           <Routes>
@@ -40,10 +40,10 @@ describe('Responsive Layout & Overflow Safeguards', () => {
     const title = await screen.findByText('Evidence workspace');
     expect(title).toBeInTheDocument();
 
-    // Check that the grid uses responsive grid-cols-1 lg:grid-cols-12 with min-w-0
-    const gridContainer = container.querySelector('.grid.grid-cols-1.lg\\:grid-cols-12');
-    expect(gridContainer).not.toBeNull();
-    expect(gridContainer.className).toContain('min-w-0');
+    const gridContainer = screen.getByRole('region', { name: 'Evidence intake and submissions' });
+    expect(gridContainer).toHaveClass('grid', 'min-w-0');
+    const desktopColumns = [...gridContainer.classList].find((name) => name.startsWith('lg:grid-cols-'));
+    expect(desktopColumns).toMatch(/^lg:grid-cols-\[minmax\(0,[^)]+\)_minmax\(0,[^)]+\)\]$/);
 
     // Check that the Add Evidence card has min-w-0
     const addCardHeading = screen.getByRole('heading', { name: 'Add evidence' });

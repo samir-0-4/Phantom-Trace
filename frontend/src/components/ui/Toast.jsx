@@ -10,9 +10,9 @@ const TOAST_ICONS = {
 };
 
 const TOAST_BORDERS = {
-  success: 'border-emerald-500/35 bg-[#0a1815]/95 text-emerald-300 shadow-[0_8px_32px_rgba(16,185,129,0.25)]',
-  error: 'border-rose-500/35 bg-[#1b0a11]/95 text-rose-300 shadow-[0_8px_32px_rgba(244,63,94,0.25)]',
-  info: 'border-cyan-500/35 bg-[#0b101c]/95 text-cyan-300 shadow-[0_8px_32px_rgba(59,130,246,0.25)]',
+  success: 'border-l-epistemic-verified',
+  error: 'border-l-risk-critical',
+  info: 'border-l-cyan-primary',
 };
 
 const ToastContext = createContext(null);
@@ -48,7 +48,7 @@ export const ToastProvider = ({ children }) => {
         createPortal(
           <div
             aria-live="polite"
-            className="fixed bottom-4 right-4 z-toast flex flex-col gap-2.5 max-w-sm w-full pointer-events-none p-2"
+            className="pointer-events-none fixed inset-x-0 bottom-4 z-toast ml-auto flex w-full max-w-sm flex-col gap-2 px-4 no-print"
           >
             {toasts.map((toast) => {
               const Icon = TOAST_ICONS[toast.type] || Info;
@@ -56,16 +56,16 @@ export const ToastProvider = ({ children }) => {
                 <div
                   key={toast.id}
                   className={cn(
-                    'pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border backdrop-blur-xl transition-all duration-fast shadow-xl',
+                    'workstation-panel pointer-events-auto flex items-start gap-3 border-l-2 p-3 text-text-primary',
                     TOAST_BORDERS[toast.type] || TOAST_BORDERS.info
                   )}
                 >
-                  <Icon className="w-5 h-5 shrink-0 mt-0.5" />
-                  <p className="text-xs sm:text-sm font-medium flex-1 leading-snug">{toast.message}</p>
+                  <Icon className="mt-1.5 size-4 shrink-0 text-text-secondary" aria-hidden="true" />
+                  <p className="flex-1 break-words py-1 text-sm leading-snug">{toast.message}</p>
                   <button
                     type="button"
                     onClick={() => removeToast(toast.id)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors"
+                    className="grid size-9 place-items-center rounded-md text-text-secondary transition-colors hover:bg-cyber-elevated hover:text-text-primary"
                     aria-label="Dismiss notification"
                   >
                     <X className="w-4 h-4" />

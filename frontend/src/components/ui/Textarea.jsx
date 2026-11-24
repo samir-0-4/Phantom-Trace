@@ -21,7 +21,7 @@ export const Textarea = ({
     <div className="w-full">
       {label && (
         <label htmlFor={areaId} className="input-label">
-          {label} {required && <span className="text-rose-400">*</span>}
+          {label} {required && <span aria-hidden="true" className="text-text-muted">*</span>}
         </label>
       )}
       <textarea
@@ -33,18 +33,18 @@ export const Textarea = ({
         aria-describedby={error ? errorId : hint ? hintId : undefined}
         className={cn(
           'input-field resize-y min-h-[90px]',
-          error && 'border-rose-500/80 focus:border-rose-500 focus:ring-rose-500/25',
+          error && 'border-risk-critical',
           className
         )}
         {...props}
       />
       {error ? (
-        <p id={errorId} className="mt-1.5 text-xs text-rose-400 font-medium flex items-center gap-1.5">
-          <span className="w-1 h-1 rounded-full bg-rose-400" />
+        <p id={errorId} className="mt-1.5 text-xs text-risk-critical font-medium flex items-center gap-1.5">
+          <span className="w-1 h-1 rounded-full bg-risk-critical" />
           {error}
         </p>
       ) : hint ? (
-        <p id={hintId} className="mt-1.5 text-xs text-slate-400">
+        <p id={hintId} className="mt-1.5 text-xs text-text-muted">
           {hint}
         </p>
       ) : null}

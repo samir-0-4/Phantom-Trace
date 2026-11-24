@@ -24,12 +24,12 @@ import { investigationService } from '../services/investigation/investigationSer
 import { formatDate, formatDateTime, titleCase } from '../utils/format';
 
 const riskStyles = {
-  LOW: 'border-emerald-500/35 bg-[#081814]/90 text-emerald-300 shadow-[0_4px_24px_rgba(16,185,129,0.15)]',
-  MODERATE: 'border-amber-500/35 bg-[#1b1509]/90 text-amber-300 shadow-[0_4px_24px_rgba(245,158,11,0.15)]',
-  MEDIUM: 'border-amber-500/35 bg-[#1b1509]/90 text-amber-300 shadow-[0_4px_24px_rgba(245,158,11,0.15)]',
-  HIGH: 'border-orange-500/35 bg-[#201009]/90 text-orange-300 shadow-[0_4px_24px_rgba(249,115,22,0.15)]',
-  CRITICAL: 'border-rose-500/35 bg-[#200911]/90 text-rose-300 shadow-[0_4px_24px_rgba(244,63,94,0.2)]',
-  INCONCLUSIVE: 'border-white/[0.1] bg-[#0c101c]/90 text-slate-300',
+  LOW: 'text-risk-low',
+  MODERATE: 'text-risk-medium',
+  MEDIUM: 'text-risk-medium',
+  HIGH: 'text-risk-high',
+  CRITICAL: 'text-risk-critical',
+  INCONCLUSIVE: 'text-text-secondary',
 };
 
 const evidenceIcon = {
@@ -69,63 +69,64 @@ const findingVerification = (finding) => {
   return verificationLabels[status] ?? 'Unknown';
 };
 
-const FindingCard = ({ finding }) => (
-  <article className="rounded-2xl border border-white/[0.08] bg-[#0c101c] p-5 sm:p-6 space-y-4 shadow-sm hover:border-white/[0.16] transition-all">
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      <div className="min-w-0 flex-1">
-        <h3 className="font-bold text-slate-100 text-sm sm:text-base tracking-tight">
-          {finding.title}
-        </h3>
-        <p className="mt-1 text-xs sm:text-sm leading-relaxed text-slate-400">
-          {finding.description}
-        </p>
+const FindingCard = ({ finding }) => {
+  const verification = findingVerification(finding);
+  const provenance = verification === 'AI assessment'
+    ? 'AI_INFERENCE'
+    : verification.startsWith('Verified') || verification.startsWith('Extracted') ? 'VERIFIED' : 'UNKNOWN';
+
+  return (
+    <article className="min-w-0 space-y-3 rounded-lg border border-cyber-border bg-cyber-subtle p-4">
+      <div className="flex flex-wrap items-start justify-between gap-2.5">
+        <div className="min-w-0 flex-1">
+          <h3 className="break-words text-base font-semibold text-text-primary">{finding.title}</h3>
+          <p className="mt-1 break-words text-sm leading-relaxed text-text-secondary">{finding.description}</p>
+        </div>
+        <Badge status={finding.severity}>{titleCase(finding.severity)}</Badge>
       </div>
-      <Badge status={finding.severity}>{titleCase(finding.severity)}</Badge>
-    </div>
 
-    <div className="grid gap-2 text-2xs font-mono text-slate-400 sm:grid-cols-2 bg-black/40 p-3.5 rounded-xl border border-white/[0.06]">
-      <p>
-        <span className="text-slate-500 font-sans">Confidence:</span>{' '}
-        <span className="text-slate-100 font-semibold">{Math.round((finding.confidence || 0) * 100)}%</span>
-      </p>
-      <p>
-        <span className="text-slate-500 font-sans">Verification:</span>{' '}
-        <span className="text-slate-100 font-semibold">{findingVerification(finding)}</span>
-      </p>
-      <p className="truncate">
-        <span className="text-slate-500 font-sans">Evidence ref:</span>{' '}
-        <span className="text-slate-100 font-semibold">{finding.evidenceReference || 'Unknown'}</span>
-      </p>
-      <p>
-        <span className="text-slate-500 font-sans">Source engine:</span>{' '}
-        <span className="text-slate-100 font-semibold">{finding.sourceType || 'Unknown'}</span>
-      </p>
-    </div>
+      <dl className="grid gap-x-4 gap-y-2.5 rounded-md border border-cyber-border bg-cyber-canvas p-3 sm:grid-cols-2">
+        <div>
+          <dt className="section-label">Verification</dt>
+          <dd className="mt-1"><Badge status={provenance}>{verification}</Badge></dd>
+        </div>
+        <div>
+          <dt className="section-label">Confidence</dt>
+          <dd className="mt-1 font-mono text-xs text-text-primary">{finding.confidence == null ? 'Not reported' : `${Math.round(finding.confidence * 100)}%`}</dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="section-label">Evidence ref</dt>
+          <dd className="mt-1 break-all font-mono text-xs leading-relaxed text-text-primary">{finding.evidenceReference || 'Unknown'}</dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="section-label">Source engine</dt>
+          <dd className="mt-1 break-words font-mono text-xs leading-relaxed text-text-primary">{finding.sourceType || 'Unknown'}</dd>
+        </div>
+      </dl>
 
-    <div className="border-t border-white/[0.08] pt-3 text-xs sm:text-sm space-y-2">
-      <p className="text-slate-300 leading-relaxed">{finding.explanation}</p>
+      {finding.explanation && <p className="break-words text-sm leading-relaxed text-text-secondary">{finding.explanation}</p>}
       {finding.recommendedAction && (
-        <p className="text-cyan-300 font-semibold bg-cyan-500/10 p-2.5 rounded-xl border border-cyan-500/25">
-          <span className="text-slate-400 font-normal">Recommended action:</span>{' '}
+        <p className="break-words border-l-2 border-cyan-primary pl-2.5 text-sm leading-relaxed text-text-primary">
+          <span className="font-semibold">Recommended action:</span>{' '}
           {finding.recommendedAction}
         </p>
       )}
-    </div>
-  </article>
-);
+    </article>
+  );
+};
 
 const ProviderResults = ({ results }) => (
   <div className="space-y-3">
     {results.length === 0 ? (
-      <p className="text-xs sm:text-sm text-slate-500">No external lookups have been recorded.</p>
+      <p className="text-sm text-text-secondary">No external lookups have been recorded.</p>
     ) : (
       results.map((result) => (
         <div
           key={result.id}
-          className="rounded-2xl border border-white/[0.08] bg-[#0c101c] p-4.5 space-y-2 shadow-sm"
+          className="space-y-2 rounded-md border border-cyber-border bg-cyber-subtle p-3"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-bold text-slate-200 font-mono text-xs">
+            <span className="font-mono text-xs font-medium text-text-primary">
               {result.provider}
             </span>
             <div className="flex items-center gap-1.5">
@@ -136,13 +137,13 @@ const ProviderResults = ({ results }) => (
               )}
             </div>
           </div>
-          <p className="break-all font-mono text-xs text-slate-300">{result.indicator}</p>
-          <p className="text-2xs text-slate-400 leading-relaxed">
+          <p className="break-all font-mono text-xs text-text-primary">{result.indicator}</p>
+          <p className="break-words text-xs leading-relaxed text-text-secondary">
             {result.errorMessage ||
               result.resultDetails ||
               'No additional provider details reported.'}
           </p>
-          <p className="text-2xs font-mono text-slate-500">
+          <p className="break-all font-mono text-xs text-text-muted">
             {formatDateTime(result.lookupTimestamp)}
             {result.providerReference ? ` · Ref: ${result.providerReference}` : ''}
           </p>
@@ -235,14 +236,14 @@ export const AnalysisResultsPage = () => {
     const reportSummary = outputs.find(
       (output) => output?.agentName === 'INVESTIGATION_REPORT' && output.summary
     )?.summary;
-    if (reportSummary) return reportSummary;
+    if (reportSummary) return { text: reportSummary, source: 'AI assessment' };
 
     // Fallback to any detective agent structured summary (Text, URL, Email, File)
     const agentSummary = outputs.find((output) => output?.summary)?.summary;
-    if (agentSummary) return agentSummary;
+    if (agentSummary) return { text: agentSummary, source: 'AI assessment' };
 
     // Fallback to heuristic risk assessment explanation
-    return data?.risk?.explanation || null;
+    return data?.risk?.explanation ? { text: data.risk.explanation, source: 'Heuristic assessment' } : null;
   }, [data]);
 
   const actions = useMemo(() => {
@@ -280,7 +281,7 @@ export const AnalysisResultsPage = () => {
     return (
       <div
         role="alert"
-        className="rounded-2xl border border-rose-800 bg-rose-950/60 p-5 text-xs sm:text-sm text-rose-300"
+        className="rounded-lg border border-risk-critical/35 bg-risk-critical/10 p-4 text-sm text-text-primary"
       >
         {error}
       </div>
@@ -294,19 +295,19 @@ export const AnalysisResultsPage = () => {
   const hasResults = executions.length > 0 || Boolean(risk);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 min-w-0">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-6 min-w-0">
+    <div className="mx-auto min-w-0 max-w-7xl space-y-4">
+      <header className="flex min-w-0 flex-col gap-4 pb-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Link
             to={`/investigations/${id}`}
-            className="mb-2 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white font-mono transition-colors"
+            className="text-link mb-2 inline-flex items-center gap-1.5 text-sm"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Back to investigation
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+          <h1 className="page-heading">
             {investigation.title}
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-400 font-mono">
+          <p className="page-lede mt-1">
             Investigation results · created {formatDate(investigation.createdAt)}
           </p>
         </div>
@@ -314,78 +315,81 @@ export const AnalysisResultsPage = () => {
           onClick={() => setShowConsentModal(true)}
           loading={processing}
           disabled={evidence.length === 0}
-          className="font-semibold shadow-lg"
+          className="w-fit shrink-0"
         >
           <Play className="h-4 w-4" />{' '}
           {processing ? 'Processing analysis' : hasResults ? 'Refresh analysis' : 'Run analysis'}
         </Button>
-      </div>
+      </header>
 
       {error && (
         <div
           role="alert"
-          className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs sm:text-sm text-rose-300 flex items-start gap-2.5 shadow-sm"
+          className="flex items-start gap-2.5 rounded-lg border border-risk-critical/35 bg-risk-critical/10 p-4 text-sm text-text-primary"
         >
-          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-risk-critical" />
           <span>{error}</span>
         </div>
       )}
       {processing && (
         <div
-          className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-xs sm:text-sm text-cyan-300 shadow-sm flex items-center gap-3"
+          className="flex items-center gap-3 rounded-lg border border-cyan-primary/35 bg-cyan-primary/10 p-4 text-sm text-text-primary"
           role="status"
         >
-          <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+          <div className="h-2.5 w-2.5 shrink-0 rounded-full bg-cyan-primary" />
           <span>Analysis is processing. No progress estimate is shown because the backend does not provide one.</span>
         </div>
       )}
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 min-w-0">
-        <div className={`rounded-2xl border p-5 shadow-card backdrop-blur-xl ${riskStyles[category] || riskStyles.INCONCLUSIVE}`}>
-          <p className="text-2xs uppercase tracking-wider font-mono opacity-80 font-bold">Risk assessment</p>
-          <p className="mt-2 text-3xl font-extrabold font-mono tracking-tight">{risk ? `${risk.score}/100` : '—'}</p>
-          <p className="mt-1 text-xs font-semibold">{titleCase(category)}</p>
-        </div>
-        {[
-          ['Status', titleCase(investigation.status)],
-          ['Confidence', risk ? `${Math.round(risk.confidence * 100)}%` : '—'],
-          ['Evidence', evidence.length],
-          ['Findings', findings.length],
-        ].map(([label, value]) => (
-          <Card key={label} className="p-5 shadow-card">
-            <p className="text-2xs uppercase tracking-wider text-slate-400 font-mono font-bold">{label}</p>
-            <p className="mt-2 text-2xl font-extrabold text-white font-mono tracking-tight">{value}</p>
-          </Card>
-        ))}
+      <section className="workstation-panel overflow-hidden" aria-label="Investigation overview">
+        <dl className="grid grid-cols-2 gap-px bg-cyber-border sm:grid-cols-4 xl:grid-cols-[1.3fr_repeat(4,minmax(0,1fr))]">
+          <div className="col-span-2 bg-cyber-surface px-4 py-3.5 sm:col-span-4 xl:col-span-1">
+            <dt className="section-label">Risk assessment</dt>
+            <dd className={`mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 ${riskStyles[category] || riskStyles.INCONCLUSIVE}`}>
+              <span className="font-mono text-2xl font-semibold tabular-nums">{risk ? `${risk.score}/100` : '—'}</span>
+              <span className="text-xs font-medium">{titleCase(category)}</span>
+            </dd>
+          </div>
+          {[
+            ['Status', titleCase(investigation.status)],
+            ['Confidence', risk ? `${Math.round(risk.confidence * 100)}%` : '—'],
+            ['Evidence', evidence.length],
+            ['Findings', findings.length],
+          ].map(([label, value]) => (
+            <div key={label} className="min-w-0 bg-cyber-surface px-4 py-3.5">
+              <dt className="section-label">{label}</dt>
+              <dd className="mt-1 break-words font-mono text-lg font-semibold tabular-nums text-text-primary">{value}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       {risk && (
         <Card
           title="Overall assessment"
           subtitle="Transparent heuristic assessment, not a mathematically proven probability of fraud."
-          className="shadow-card"
         >
-          <p className="text-xs sm:text-sm leading-relaxed text-slate-200">{risk.explanation}</p>
+          <p className="break-words text-sm leading-relaxed text-text-primary">{risk.explanation}</p>
           {risk.missingInformation && (
-            <p className="mt-3.5 flex items-start gap-2.5 text-xs sm:text-sm text-amber-300 bg-amber-950/30 p-3.5 rounded-xl border border-amber-900/50">
-              <Info className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" /> Unknown: {risk.missingInformation}
+            <p className="mt-3 flex items-start gap-2.5 rounded-md border border-epistemic-unknown/35 bg-cyber-subtle p-3 text-sm leading-relaxed text-text-primary">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-epistemic-unknown" /> Unknown: {risk.missingInformation}
             </p>
           )}
           {risk.contributingSignals?.length > 0 && (
             <div className="mt-5 space-y-2.5">
-              <p className="text-2xs font-bold uppercase font-mono tracking-wider text-slate-400">
+              <p className="section-label">
                 Contributing Signals
               </p>
               {risk.contributingSignals.map((signal) => (
                 <div
                   key={signal.id}
-                  className="rounded-xl border border-white/[0.08] bg-[#090e1a] p-3.5 space-y-1.5"
+                  className="space-y-1.5 rounded-md border border-cyber-border bg-cyber-subtle p-3"
                 >
-                  <div className="flex justify-between items-center gap-3 text-xs sm:text-sm">
-                    <span className="text-slate-100 font-medium">{signal.signal}</span>
-                    <span className="text-cyan-400 font-mono font-extrabold">+{signal.weight}</span>
+                  <div className="flex items-start justify-between gap-3 text-sm">
+                    <span className="break-words font-medium text-text-primary">{signal.signal}</span>
+                    <span className="shrink-0 font-mono font-semibold text-cyan-primary">+{signal.weight}</span>
                   </div>
-                  <p className="text-2xs text-slate-400 font-mono">
+                  <p className="break-words text-xs leading-relaxed text-text-secondary">
                     {signal.explanation} · Evidence: {signal.evidenceReferences}
                   </p>
                 </div>
@@ -395,183 +399,139 @@ export const AnalysisResultsPage = () => {
         </Card>
       )}
 
-      <Card
-        title="Executive summary"
-        subtitle="Based on structured report output when available."
-        className="shadow-card"
-      >
+      <Card title="Executive summary" subtitle="Based on structured report output when available.">
         {summary ? (
-          <p className="text-xs sm:text-sm leading-relaxed text-slate-200">{summary}</p>
+          <div className="space-y-2">
+            <Badge status={summary.source === 'AI assessment' ? 'AI_INFERENCE' : 'UNKNOWN'}>{summary.source}</Badge>
+            <p className="break-words text-sm leading-relaxed text-text-primary">{summary.text}</p>
+          </div>
         ) : (
           <EmptyState
             icon={Sparkles}
             title="Summary not available"
-            message={
-              hasResults
-                ? 'A report agent summary was not returned.'
-                : 'Run analysis to generate a structured summary.'
-            }
+            message={hasResults ? 'A report agent summary was not returned.' : 'Run analysis to generate a structured summary.'}
           />
         )}
       </Card>
 
-      <Card
-        title={`Findings (${findings.length})`}
-        subtitle="Each finding shows its source, evidence reference, and verification state."
-        className="shadow-card"
-      >
-        {findings.length ? (
-          <div className="space-y-4">
-            {findings.map((finding, index) => (
-              <FindingCard key={`${finding.title}-${index}`} finding={finding} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            icon={ShieldCheck}
-            title="No findings returned"
-            message={
-              failed.length
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <Card
+          title={`Findings (${findings.length})`}
+          subtitle="Each finding shows its source, evidence reference, and verification state."
+        >
+          {findings.length ? (
+            <div className="space-y-3">
+              {findings.map((finding, index) => (
+                <FindingCard key={`${finding.title}-${index}`} finding={finding} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={ShieldCheck}
+              title="No findings returned"
+              message={failed.length
                 ? `Analysis failed: ${failed[0]?.errorMessage || 'External AI provider credentials unconfigured or timed out.'}`
                 : 'No structured findings are available yet.'
-            }
-          />
-        )}
-      </Card>
+              }
+            />
+          )}
+        </Card>
 
-      <Card
-        title="Evidence breakdown"
-        subtitle={`${evidence.length} submitted item${evidence.length === 1 ? '' : 's'}.`}
-        className="shadow-card"
-      >
-        {evidence.length ? (
-          <div className="space-y-4">
-            {details.map(({ item, indicators, threats, analysis }) => {
-              const Icon = evidenceIcon[item.evidenceType] || FileText;
-              return (
-                <div key={item.id} className="rounded-2xl border border-white/[0.08] bg-[#090e1a] p-4.5 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 min-w-0">
-                      <Icon className="mt-0.5 h-4 w-4 text-cyan-400 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="font-semibold text-slate-100 text-xs sm:text-sm">
-                          {titleCase(item.evidenceType)}
-                        </p>
-                        <p className="text-2xs text-slate-400 font-mono truncate" title={item.description || item.url}>
-                          {item.description ||
-                            item.url ||
-                            item.subject ||
-                            item.originalFilename ||
-                            'Submitted evidence'}
-                        </p>
+        <div className="min-w-0 space-y-4">
+          <Card title="Evidence breakdown" subtitle={`${evidence.length} submitted item${evidence.length === 1 ? '' : 's'}.`}>
+            {evidence.length ? (
+              <div className="space-y-3">
+                {details.map(({ item, indicators, threats, analysis }) => {
+                  const Icon = evidenceIcon[item.evidenceType] || FileText;
+                  return (
+                    <article key={item.id} className="space-y-3 rounded-lg border border-cyber-border bg-cyber-subtle p-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="flex min-w-0 flex-1 items-start gap-2">
+                          <Icon className="mt-0.5 h-4 w-4 shrink-0 text-cyan-primary" aria-hidden="true" />
+                          <div className="min-w-0">
+                            <h4 className="text-sm font-semibold text-text-primary">{titleCase(item.evidenceType)}</h4>
+                            <p className="mt-0.5 break-words text-xs leading-relaxed text-text-secondary">
+                              {item.description || item.url || item.subject || item.originalFilename || 'Submitted evidence'}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge>
+                          {analysis.length ? 'Analyzed' : 'Not analyzed'}
+                        </Badge>
                       </div>
-                    </div>
-                    <Badge
-                      status={
-                        analysis.some((entry) => entry.executionStatus === 'FAILED')
-                          ? 'UNKNOWN'
-                          : analysis.length
-                          ? 'VERIFIED'
-                          : 'UNKNOWN'
-                      }
-                    >
-                      {analysis.length ? 'Analyzed' : 'Not analyzed'}
-                    </Badge>
-                  </div>
-                  {indicators.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {indicators.map((indicator) => (
-                        <span
-                          key={indicator.id}
-                          className="max-w-full truncate inline-block rounded-full bg-[#111728] px-3 py-0.5 text-2xs font-mono text-slate-300 border border-white/[0.08]"
-                          title={`${titleCase(indicator.indicatorType)}: ${indicator.normalizedValue}`}
-                        >
-                          {titleCase(indicator.indicatorType)}: {indicator.normalizedValue}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {threats.length > 0 && (
-                    <div className="pt-2">
-                      <ProviderResults results={threats} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <EmptyState
-            icon={FileText}
-            title="No evidence submitted"
-            message="Submit evidence before running analysis."
-          />
-        )}
-      </Card>
+                      {indicators.length > 0 && (
+                        <ul className="flex flex-wrap gap-1.5">
+                          {indicators.map((indicator) => (
+                            <li key={indicator.id} className="max-w-full break-all rounded-md border border-cyber-border bg-cyber-elevated px-2 py-0.5 font-mono text-xs text-text-primary">
+                              {titleCase(indicator.indicatorType)}: {indicator.normalizedValue}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {threats.length > 0 && <ProviderResults results={threats} />}
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <EmptyState icon={FileText} title="No evidence submitted" message="Submit evidence before running analysis." />
+            )}
+          </Card>
 
-      <Card
-        title="Threat intelligence"
-        subtitle="External results are never treated as clean when unavailable."
-        className="shadow-card"
-      >
-        <ProviderResults results={details.flatMap((item) => item.threats)} />
-      </Card>
+          <Card title="Threat intelligence" subtitle="External results are never treated as clean when unavailable.">
+            <ProviderResults results={details.flatMap((item) => item.threats)} />
+          </Card>
 
-      <Card
-        title="Recommended actions"
-        subtitle="Actions are shown only when supported by returned findings or evidence."
-        className="shadow-card"
-      >
-        {actions.length ? (
-          <ul className="space-y-3">
-            {actions.map((action) => (
-              <li
-                key={action}
-                className="flex items-start gap-3.5 text-xs sm:text-sm text-slate-200 bg-[#090e1a] p-4 rounded-2xl border border-white/[0.08] shadow-sm"
-              >
-                <ShieldAlert className="h-4 w-4 shrink-0 text-cyan-400 mt-0.5" />
-                <span className="leading-relaxed">{action}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <EmptyState
-            icon={CheckCircle2}
-            title="No specific actions returned"
-            message="Review the unknown information and verify any request independently."
-          />
-        )}
-      </Card>
+          <Card title="Recommended actions" subtitle="Actions are shown only when supported by returned findings or evidence.">
+            {actions.length ? (
+              <ul className="space-y-3">
+                {actions.map((action) => (
+                  <li key={action} className="flex items-start gap-2.5 text-sm text-text-primary">
+                    <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-cyan-primary" aria-hidden="true" />
+                    <span className="leading-relaxed">{action}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState
+                icon={CheckCircle2}
+                title="No specific actions returned"
+                message="Review the unknown information and verify any request independently."
+              />
+            )}
+          </Card>
+        </div>
+      </div>
 
       {showConsentModal && (
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="ai-disclosure-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-modal flex items-center justify-center overflow-y-auto bg-black/75 p-4"
         >
-          <div className="relative w-full max-w-lg rounded-2xl border border-white/[0.14] bg-[#0c1220] p-6 shadow-2xl space-y-4">
+          <div className="workstation-panel relative w-full max-w-lg space-y-4 p-4 sm:p-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-epistemic-inference/30 bg-epistemic-inference/10 text-epistemic-inference">
                 <AlertCircle className="h-5 w-5" />
               </div>
               <div>
-                <h3 id="ai-disclosure-modal-title" className="text-base font-bold text-white">
+                <h3 id="ai-disclosure-modal-title" className="text-base font-semibold text-text-primary">
                   External AI Analysis Disclosure
                 </h3>
-                <p className="text-xs text-slate-400">Third-Party Data Transmission Confirmation</p>
+                <p className="text-xs text-text-secondary">Third-Party Data Transmission Confirmation</p>
               </div>
             </div>
 
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm leading-relaxed text-text-primary">
               Extracted text (message text, email body/headers, PDF text, OCR text) is sent to Groq (third-party) for AI threat analysis.
             </p>
 
-            <p className="text-2xs text-slate-400 leading-relaxed">
+            <p className="break-words text-xs leading-relaxed text-text-secondary">
               Do not proceed if your evidence contains unredacted Personally Identifiable Information (PII), confidential credentials, or legally restricted internal communications.
             </p>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.08]">
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-cyber-border pt-3">
               <Button
                 variant="secondary"
                 size="sm"

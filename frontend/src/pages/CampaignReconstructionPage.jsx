@@ -25,41 +25,52 @@ import investigationService from '../services/investigation/investigationService
 
 const classificationStyles = {
   SYNTHETIC_DEMO_CAMPAIGN: {
-    border: 'border-purple-500/40 bg-gradient-to-r from-purple-950/50 via-cyan-950/30 to-[#0c101c]',
-    badgeVariant: 'purple',
+    border: 'border-l-text-muted',
+    badgeVariant: 'SYNTHETIC_DEMO_CAMPAIGN',
     badgeText: 'SYNTHETIC DEMO CAMPAIGN',
-    iconColor: 'text-purple-400',
+    iconColor: 'text-text-secondary',
     description: 'Simulated demonstration campaign using RFC 2606 (.test) and RFC 5737 (TEST-NET) test fixtures. Demonstrates multi-case correlation without real-world threat attribution.',
   },
   CONFIRMED: {
-    border: 'border-rose-500/40 bg-gradient-to-r from-rose-950/50 via-purple-950/30 to-[#0c101c]',
-    badgeVariant: 'danger',
+    border: 'border-l-risk-critical',
+    badgeVariant: 'CRITICAL',
     badgeText: 'CONFIRMED CAMPAIGN',
-    iconColor: 'text-rose-400',
+    iconColor: 'text-risk-critical',
     description: 'Shared infrastructure is confirmed malicious by external threat intelligence or identical cryptographic payload matches.',
   },
   PROBABLE: {
-    border: 'border-amber-500/40 bg-gradient-to-r from-amber-950/40 via-purple-950/25 to-[#0c101c]',
-    badgeVariant: 'warning',
+    border: 'border-l-risk-medium',
+    badgeVariant: 'MEDIUM',
     badgeText: 'PROBABLE CAMPAIGN',
-    iconColor: 'text-amber-400',
+    iconColor: 'text-risk-medium',
     description: 'Multiple distinct indicators (e.g. domain, IP, sender identity) converge across independent evidence items or investigations.',
   },
   POSSIBLE: {
-    border: 'border-cyan-500/30 bg-gradient-to-r from-cyan-950/35 via-slate-900/40 to-[#0c101c]',
-    badgeVariant: 'cyan',
+    border: 'border-l-cyan-primary',
+    badgeVariant: 'ACCENT',
     badgeText: 'POSSIBLE CAMPAIGN',
-    iconColor: 'text-cyan-400',
+    iconColor: 'text-cyan-primary',
     description: 'Single indicator overlap or heuristic correlation observed across artifacts; further evidence required for attribution.',
   },
   ISOLATED_INCIDENT: {
-    border: 'border-white/[0.08] bg-[#0c101c]/90',
+    border: 'border-l-text-muted',
     badgeVariant: 'secondary',
     badgeText: 'ISOLATED INCIDENT',
-    iconColor: 'text-slate-400',
+    iconColor: 'text-text-secondary',
     description: 'No cross-evidence or cross-investigation footprint identified. The submitted evidence appears isolated.',
   },
 };
+
+const caseAction = 'inline-flex min-h-9 shrink-0 items-center gap-2 rounded-md border border-cyber-border bg-cyber-surface px-3 text-sm font-medium text-text-primary hover:bg-cyber-elevated';
+
+const CampaignMetric = ({ label, value, detail = false }) => (
+  <div className="min-w-0 bg-cyber-surface px-4 py-3">
+    <dt className="section-label text-text-secondary">{label}</dt>
+    <dd className={detail ? 'mt-1.5 break-all font-mono text-xs text-text-primary' : 'mt-1 font-mono text-xl font-semibold tabular-nums text-text-primary'}>
+      {value}
+    </dd>
+  </div>
+);
 
 export const CampaignReconstructionPage = () => {
   const { id } = useParams();
@@ -106,7 +117,7 @@ export const CampaignReconstructionPage = () => {
     return (
       <div className="flex h-96 flex-col items-center justify-center gap-3">
         <Spinner size="lg" />
-        <p className="font-mono text-xs uppercase tracking-widest text-slate-400">
+        <p className="text-center text-sm text-text-secondary">
           Reconstructing Campaign Footprint & Cross-Case Attribution…
         </p>
       </div>
@@ -132,307 +143,188 @@ export const CampaignReconstructionPage = () => {
   const attributionSummary = campaignData?.attributionSummary || 'Heuristic correlation completed across persisted records.';
   const classStyle = classificationStyles[classification] || classificationStyles.ISOLATED_INCIDENT;
 
-  return (
-    <div className="space-y-8 pb-12 min-w-0">
-      {/* Navigation header */}
-      <div className="flex flex-col gap-4 border-b border-white/[0.08] pb-6 sm:flex-row sm:items-center sm:justify-between min-w-0">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link
-            to={`/investigations/${id}`}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#0e121e] text-slate-400 transition hover:border-cyan-500/40 hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-2xs uppercase tracking-widest text-cyan-400">
-                Investigation Dossier
-              </span>
-              <span className="text-slate-600">/</span>
-              <span className="font-mono text-2xs text-slate-400 truncate">Case #{id?.slice(0, 8)}</span>
-            </div>
-            <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl truncate">
-              {investigation?.title || 'Campaign Reconstruction'}
-            </h1>
-          </div>
-        </div>
+  const verification = classification === 'CONFIRMED'
+    ? 'EXTERNAL_INTEL'
+    : classification === 'SYNTHETIC_DEMO_CAMPAIGN' ? 'SYNTHETIC_FIXTURE' : 'DETERMINISTIC';
 
+  return (
+    <div className="min-w-0 space-y-6 pb-10">
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <Link to={`/investigations/${id}`} className="text-link mb-2 inline-flex items-center gap-1.5 text-sm">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Investigation Dossier
+          </Link>
+          <h1 className="page-heading break-words">{investigation?.title || 'Campaign Reconstruction'}</h1>
+          <p className="page-lede mt-1">
+            Campaign reconstruction <span className="font-mono text-xs text-text-muted">/ Case #{id?.slice(0, 8)}</span>
+          </p>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           {investigation?.status && <StatusBadge status={investigation.status} />}
-          <Link to={`/investigations/${id}/graph`}>
-            <Button variant="secondary" size="sm" className="gap-2 font-semibold">
-              <GitBranch className="h-3.5 w-3.5 text-cyan-400" />
-              Evidence Graph
-            </Button>
+          <Link to={`/investigations/${id}/graph`} className={caseAction}>
+            <GitBranch className="h-4 w-4 text-cyan-primary" aria-hidden="true" /> Evidence Graph
           </Link>
-          <Link to={`/investigations/${id}/report`}>
-            <Button variant="secondary" size="sm" className="gap-2 font-semibold">
-              <FileText className="h-3.5 w-3.5 text-slate-300" />
-              Audit Report
-            </Button>
+          <Link to={`/investigations/${id}/report`} className={caseAction}>
+            <FileText className="h-4 w-4 text-text-secondary" aria-hidden="true" /> Audit Report
           </Link>
         </div>
-      </div>
+      </header>
 
-      {/* Signature Campaign Classification Banner */}
-      <div className={`relative overflow-hidden rounded-2xl border p-6 shadow-2xl ${classStyle.border}`}>
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-start gap-4">
-            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/40 ${classStyle.iconColor} shadow-inner`}>
-              <Network className="h-6 w-6" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h2 className="text-base font-bold text-white sm:text-lg">
-                  Scam Campaign Footprint Reconstruction
-                </h2>
-                <Badge variant={classStyle.badgeVariant} size="sm">
-                  {classStyle.badgeText}
-                </Badge>
-              </div>
-              <p className="max-w-3xl text-xs leading-relaxed text-slate-300 sm:text-sm">
-                {classStyle.description}
-              </p>
-            </div>
+      <section className={`workstation-panel overflow-hidden border-l-2 ${classStyle.border}`}>
+        <div className="px-4 py-5 sm:px-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Network className={`h-5 w-5 ${classStyle.iconColor}`} aria-hidden="true" />
+            <h2 className="text-lg font-semibold text-text-primary">Scam Campaign Footprint Reconstruction</h2>
+            <Badge variant={classStyle.badgeVariant}>{classStyle.badgeText}</Badge>
           </div>
-
-          <div className="flex flex-wrap items-center gap-3 shrink-0 rounded-xl bg-black/40 border border-white/[0.08] p-3 font-mono text-xs">
-            <div className="text-center px-3 border-r border-white/10">
-              <p className="text-2xs text-slate-400 uppercase">Connected Cases</p>
-              <p className="text-lg font-bold text-cyan-300">{connectedInvestigations.length}</p>
-            </div>
-            <div className="text-center px-3 border-r border-white/10">
-              <p className="text-2xs text-slate-400 uppercase">Shared Indicators</p>
-              <p className="text-lg font-bold text-purple-300">{sharedIndicators.length}</p>
-            </div>
-            <div className="text-center px-3">
-              <p className="text-2xs text-slate-400 uppercase">Verification</p>
-              <p className={`text-xs font-bold ${classification === 'CONFIRMED' ? 'text-rose-400' : classification === 'SYNTHETIC_DEMO_CAMPAIGN' ? 'text-purple-400' : 'text-slate-300'}`}>
-                {classification === 'CONFIRMED' ? 'EXTERNAL_INTEL' : classification === 'SYNTHETIC_DEMO_CAMPAIGN' ? 'SYNTHETIC_FIXTURE' : 'DETERMINISTIC'}
-              </p>
-            </div>
-          </div>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-text-secondary">{classStyle.description}</p>
         </div>
-
-        {/* Forensic Attribution Narrative */}
-        <div className="mt-5 border-t border-white/[0.08] pt-4">
-          <p className="font-mono text-2xs uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-1.5">
-            <Fingerprint className="h-3.5 w-3.5 text-cyan-400" />
+        <dl className="grid gap-px border-y border-cyber-border bg-cyber-border sm:grid-cols-3">
+          <CampaignMetric label="Connected Cases" value={connectedInvestigations.length} />
+          <CampaignMetric label="Shared Indicators" value={sharedIndicators.length} />
+          <CampaignMetric label="Verification" value={verification} detail />
+        </dl>
+        <div className="px-4 py-4 sm:px-5">
+          <h3 className="section-label flex items-center gap-2 text-text-secondary">
+            <Fingerprint className="h-4 w-4 text-cyan-primary" aria-hidden="true" />
             Attribution &amp; Relationship Narrative
-          </p>
-          <p className="text-xs leading-relaxed text-slate-200 font-sans bg-black/30 p-3.5 rounded-xl border border-white/[0.05]">
-            {attributionSummary}
-          </p>
+          </h3>
+          <p className="mt-2 break-words text-sm leading-relaxed text-text-primary">{attributionSummary}</p>
         </div>
-      </div>
+      </section>
 
-      {/* Connected Investigations Section */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <FolderSearch className="h-4 w-4 text-cyan-400" />
-            <h3 className="font-mono text-xs uppercase tracking-wider text-slate-300">
-              Cross-Investigation Campaign Dossiers ({connectedInvestigations.length})
-            </h3>
-          </div>
-          <div className="flex items-center gap-3">
-            {connectedInvestigations.length > 0 && (
-              <span className="font-mono text-2xs text-purple-400 flex items-center gap-1">
-                <Sparkles className="h-3 w-3" />
-                Haunted infrastructure detected across dossiers
-              </span>
-            )}
-            <span className="font-mono text-2xs text-slate-500">
-              Isolated by Tenant Boundaries
-            </span>
-          </div>
+      <section className="min-w-0 space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-text-primary">
+            <FolderSearch className="h-4 w-4 shrink-0 text-cyan-primary" aria-hidden="true" />
+            Cross-Investigation Campaign Dossiers ({connectedInvestigations.length})
+          </h2>
+          <span className="text-xs text-text-muted">Isolated by Tenant Boundaries</span>
         </div>
-
         {connectedInvestigations.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="workstation-panel divide-y divide-cyber-border overflow-hidden">
             {connectedInvestigations.map((inv) => (
-              <Card
-                key={inv.id}
-                className="relative flex flex-col justify-between stitched-border border-white/[0.12] bg-[#0c101c]/90 p-5 shadow-lg hover:border-cyan-500/50 transition-all group"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <CategoryBadge category={inv.category} />
-                      <Badge variant={inv.confidence === 'CONFIRMED' ? 'danger' : inv.confidence === 'SYNTHETIC_DEMO' ? 'purple' : 'warning'} size="xs">
-                        {inv.confidence === 'SYNTHETIC_DEMO' ? 'SYNTHETIC DEMO' : inv.confidence}
-                      </Badge>
-                    </div>
-                    <span className="font-mono text-2xs text-slate-500">
-                      {inv.sharedIndicatorCount} Shared
-                    </span>
+              <li key={inv.id} className="grid min-w-0 gap-3 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:px-5">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <CategoryBadge category={inv.category} />
+                    <Badge variant={inv.confidence === 'CONFIRMED' ? 'CRITICAL' : inv.confidence === 'SYNTHETIC_DEMO' ? 'SYNTHETIC_DEMO' : 'MEDIUM'}>
+                      {inv.confidence === 'SYNTHETIC_DEMO' ? 'SYNTHETIC DEMO' : inv.confidence}
+                    </Badge>
                   </div>
-
-                  <div>
-                    <h4 className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">
-                      {inv.title}
-                    </h4>
-                    <p className="mt-1 text-2xs text-slate-400 line-clamp-2">
-                      {inv.relationshipExplanation}
-                    </p>
-                  </div>
-
+                  <h3 className="mt-2 break-words text-sm font-semibold text-text-primary">{inv.title}</h3>
+                  <p className="mt-1 break-words text-sm leading-relaxed text-text-secondary">{inv.relationshipExplanation}</p>
                   {inv.sharedIndicatorValues?.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {inv.sharedIndicatorValues.slice(0, 3).map((val, idx) => (
-                        <span
-                          key={idx}
-                          className="font-mono text-2xs px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20 truncate max-w-[200px]"
-                        >
-                          {val}
-                        </span>
+                    <ul className="mt-2 flex flex-wrap gap-1.5">
+                      {inv.sharedIndicatorValues.slice(0, 3).map((value, index) => (
+                        <li key={`${value}-${index}`} className="max-w-full break-all rounded-md border border-cyber-border bg-cyber-subtle px-2 py-0.5 font-mono text-xs text-text-primary">
+                          {value}
+                        </li>
                       ))}
                       {inv.sharedIndicatorValues.length > 3 && (
-                        <span className="font-mono text-2xs text-slate-500 px-1">
-                          +{inv.sharedIndicatorValues.length - 3} more
-                        </span>
+                        <li className="px-1 font-mono text-xs text-text-muted">+{inv.sharedIndicatorValues.length - 3} more</li>
                       )}
-                    </div>
+                    </ul>
                   )}
                 </div>
-
-                <div className="mt-4 border-t border-white/[0.06] pt-3 flex items-center justify-between">
-                  <span className="font-mono text-2xs text-slate-500">
-                    Status: {inv.status}
-                  </span>
-                  <Link
-                    to={`/investigations/${inv.id}`}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
-                  >
-                    <span>Inspect Case</span>
-                    <ExternalLink className="h-3 w-3" />
+                <div className="flex flex-wrap items-center gap-3 text-xs text-text-secondary sm:flex-col sm:items-end sm:gap-1.5">
+                  <span className="font-mono">{inv.sharedIndicatorCount} Shared</span>
+                  <span>Status: {inv.status}</span>
+                  <Link to={`/investigations/${inv.id}`} className="text-link inline-flex items-center gap-1.5 text-sm font-medium">
+                    Inspect Case <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                   </Link>
                 </div>
-              </Card>
+              </li>
             ))}
-          </div>
+          </ul>
         ) : (
-          <Card className="border-white/[0.06] bg-[#0c101c]/50 p-6 text-center">
-            <Info className="mx-auto mb-2 h-6 w-6 text-slate-500" />
-            <p className="text-sm text-slate-400">
+          <Card>
+            <p className="flex items-start gap-2 text-sm text-text-secondary">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-cyan-primary" aria-hidden="true" />
               No other investigations in your organization share indicators with this case.
             </p>
-            <p className="mt-1 text-2xs text-slate-500">
+            <p className="mt-2 text-sm text-text-muted">
               Submit related phishing emails or SMS alerts, or load the synthetic demo dataset to evaluate multi-case campaign correlation.
             </p>
           </Card>
         )}
-      </div>
+      </section>
 
-      {/* Campaign Signals Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <ShieldAlert className="h-4 w-4 text-cyan-400" />
-            <h3 className="font-mono text-xs uppercase tracking-wider text-slate-300">
-              Campaign Detection Signals ({campaignSignals.length})
-            </h3>
-          </div>
-          <span className="font-mono text-2xs text-slate-500">
-            Epistemic: DETERMINISTIC_CORRELATION
-          </span>
+      <section className="min-w-0 space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-text-primary">
+            <ShieldAlert className="h-4 w-4 shrink-0 text-cyan-primary" aria-hidden="true" />
+            Campaign Detection Signals ({campaignSignals.length})
+          </h2>
+          <span className="break-all text-xs text-text-muted">Epistemic: DETERMINISTIC_CORRELATION</span>
         </div>
-
         {campaignSignals.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {campaignSignals.map((signal, idx) => (
-              <Card
-                key={idx}
-                className="relative flex flex-col justify-between border-white/[0.08] bg-[#0c101c]/90 p-5 shadow-lg"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-2xs font-semibold uppercase tracking-wider text-slate-400">
-                      Signal #{idx + 1}
-                    </span>
-                    <Badge
-                      variant={signal.confidence === 'CONFIRMED' ? 'danger' : signal.confidence === 'SYNTHETIC_DEMO_CAMPAIGN' ? 'purple' : signal.confidence === 'PROBABLE' ? 'warning' : 'cyan'}
-                      size="sm"
-                    >
-                      {signal.confidence.replace(/_/g, ' ')}
-                    </Badge>
-                  </div>
-                  <p className="text-sm font-medium text-slate-200">{signal.description}</p>
+          <ol className="workstation-panel divide-y divide-cyber-border">
+            {campaignSignals.map((signal, index) => (
+              <li key={index} className="grid min-w-0 gap-2 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:px-5">
+                <div className="min-w-0">
+                  <span className="section-label text-text-secondary">Signal #{index + 1}</span>
+                  <p className="mt-1 break-words text-sm leading-relaxed text-text-primary">{signal.description}</p>
+                  <p className="mt-2 text-xs text-text-secondary">
+                    Linked Artifacts: <strong className="font-mono font-medium text-text-primary">{signal.supportingEvidenceIds?.length || 0} Evidence Items</strong>
+                  </p>
                 </div>
-
-                <div className="mt-4 flex items-center justify-between border-t border-white/[0.05] pt-3 font-mono text-2xs text-slate-400">
-                  <span>Linked Artifacts:</span>
-                  <span className="font-semibold text-cyan-400">
-                    {signal.supportingEvidenceIds?.length || 0} Evidence Items
-                  </span>
-                </div>
-              </Card>
+                <Badge
+                  variant={signal.confidence === 'CONFIRMED' ? 'CRITICAL' : signal.confidence === 'SYNTHETIC_DEMO_CAMPAIGN' ? 'SYNTHETIC_DEMO_CAMPAIGN' : signal.confidence === 'PROBABLE' ? 'MEDIUM' : 'ACCENT'}
+                  className="w-fit"
+                >
+                  {signal.confidence?.replace(/_/g, ' ') || 'Unknown'}
+                </Badge>
+              </li>
             ))}
-          </div>
+          </ol>
         ) : (
-          <Card className="border-white/[0.06] bg-[#0c101c]/50 p-6 text-center">
-            <Info className="mx-auto mb-2 h-6 w-6 text-slate-500" />
-            <p className="text-sm text-slate-400">
+          <Card>
+            <p className="flex items-start gap-2 text-sm text-text-secondary">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-cyan-primary" aria-hidden="true" />
               No aggregated multi-artifact signals identified yet.
             </p>
           </Card>
         )}
-      </div>
+      </section>
 
-      {/* Shared Indicators Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Share2 className="h-4 w-4 text-purple-400" />
-            <h3 className="font-mono text-xs uppercase tracking-wider text-slate-300">
-              Shared Campaign Indicators ({sharedIndicators.length})
-            </h3>
-          </div>
-          <span className="font-mono text-2xs text-slate-500">
-            Requires Evidence or Cross-Case Convergence
-          </span>
+      <section className="min-w-0 space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-text-primary">
+            <Share2 className="h-4 w-4 shrink-0 text-cyan-primary" aria-hidden="true" />
+            Shared Campaign Indicators ({sharedIndicators.length})
+          </h2>
+          <span className="text-xs text-text-muted">Requires Evidence or Cross-Case Convergence</span>
         </div>
 
         {sharedIndicators.length > 0 ? (
-          <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c101c]/90 shadow-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left font-sans text-xs">
-                <thead>
-                  <tr className="border-b border-white/[0.08] bg-white/[0.02] font-mono text-2xs uppercase tracking-wider text-slate-400">
-                    <th className="py-3.5 pl-6 pr-4">Indicator Value</th>
-                    <th className="px-4 py-3.5">Type</th>
-                    <th className="px-4 py-3.5">Scope</th>
-                    <th className="px-4 py-3.5 text-center">Crossings</th>
-                    <th className="py-3.5 pl-4 pr-6 text-right">Verification Status</th>
+          <div className="workstation-panel overflow-hidden">
+            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Shared campaign indicators">
+              <table className="w-full min-w-[620px] text-left text-sm">
+                <thead className="border-b border-cyber-border bg-cyber-elevated text-text-secondary">
+                  <tr className="section-label">
+                    <th scope="col" className="px-4 py-3 sm:pl-5">Indicator Value</th>
+                    <th scope="col" className="px-4 py-3">Type</th>
+                    <th scope="col" className="px-4 py-3">Scope</th>
+                    <th scope="col" className="px-4 py-3">Crossings</th>
+                    <th scope="col" className="px-4 py-3">Verification Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.05]">
-                  {sharedIndicators.map((item, idx) => (
-                    <tr key={idx} className="transition-colors hover:bg-white/[0.02]">
-                      <td className="py-4 pl-6 pr-4 font-mono font-medium text-cyan-300 break-all max-w-xs">
-                        {item.value}
+                <tbody className="divide-y divide-cyber-border">
+                  {sharedIndicators.map((item, index) => (
+                    <tr key={`${item.type}-${item.value}-${index}`} className="hover:bg-cyber-elevated">
+                      <th scope="row" className="max-w-xs break-all px-4 py-3.5 font-mono text-xs font-medium text-text-primary sm:pl-5">{item.value}</th>
+                      <td className="px-4 py-3.5"><Badge variant="secondary">{item.type}</Badge></td>
+                      <td className="px-4 py-3.5 text-xs text-text-secondary">
+                        {item.crossInvestigation ? 'Multi-Case Campaign' : 'Single-Case Evidence'}
                       </td>
-                      <td className="px-4 py-4">
-                        <Badge variant="secondary" size="sm">
-                          {item.type}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className={`inline-flex items-center gap-1 font-mono text-2xs px-2 py-0.5 rounded-full border ${item.crossInvestigation ? 'border-rose-500/30 bg-rose-500/10 text-rose-300' : 'border-cyan-500/20 bg-cyan-500/10 text-cyan-300'}`}>
-                          {item.crossInvestigation ? 'Multi-Case Campaign' : 'Single-Case Evidence'}
+                      <td className="px-4 py-3.5">
+                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap font-mono text-xs text-text-secondary">
+                          <Layers className="h-3.5 w-3.5 text-cyan-primary" aria-hidden="true" /> {item.count} Artifacts
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-center font-mono">
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/20 bg-purple-500/10 px-2.5 py-0.5 text-2xs font-semibold text-purple-300">
-                          <Layers className="h-3 w-3" />
-                          {item.count} Artifacts
-                        </span>
-                      </td>
-                      <td className="py-4 pl-4 pr-6 text-right">
-                        <Badge
-                          variant={item.verificationStatus === 'VERIFIED_MALICIOUS' ? 'danger' : item.verificationStatus === 'SYNTHETIC_TEST_INDICATOR' ? 'purple' : 'cyan'}
-                          size="sm"
-                        >
+                      <td className="px-4 py-3.5">
+                        <Badge variant={item.verificationStatus === 'VERIFIED_MALICIOUS' ? 'CRITICAL' : item.verificationStatus === 'SYNTHETIC_TEST_INDICATOR' ? 'SYNTHETIC_TEST_INDICATOR' : 'ACCENT'}>
                           {item.verificationStatus || 'DETERMINISTIC'}
                         </Badge>
                       </td>
@@ -443,33 +335,27 @@ export const CampaignReconstructionPage = () => {
             </div>
           </div>
         ) : (
-          <EmptyState
-            icon={Network}
-            title="No Shared Campaign Footprint Yet"
-            description="Campaign reconstruction correlates indicators across at least two distinct evidence submissions or across separate cases. Add more evidence items to this investigation or seed the synthetic demonstration campaign to evaluate cross-case attribution."
-            action={
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <Link to={`/investigations/${id}/analysis`}>
-                  <Button size="sm" className="gap-2 font-semibold">
-                    <Share2 className="h-4 w-4" />
+          <Card padded={false}>
+            <EmptyState
+              icon={Network}
+              title="No Shared Campaign Footprint Yet"
+              message="Campaign reconstruction correlates indicators across at least two distinct evidence submissions or across separate cases. Add more evidence items to this investigation or seed the synthetic demonstration campaign to evaluate cross-case attribution."
+              action={
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Link to={`/investigations/${id}/analysis`} className={caseAction}>
+                    <Share2 className="h-4 w-4 text-cyan-primary" aria-hidden="true" />
                     Add Evidence
+                  </Link>
+                  <Button variant="secondary" size="sm" onClick={handleSeedDemo} loading={seedingDemo}>
+                    <Sparkles className="h-4 w-4 text-cyan-primary" aria-hidden="true" />
+                    Load Demo Campaign
                   </Button>
-                </Link>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleSeedDemo}
-                  loading={seedingDemo}
-                  className="gap-2 font-semibold text-cyan-300 border-cyan-500/30"
-                >
-                  <Sparkles className="h-4 w-4 text-cyan-400" />
-                  Load Demo Campaign
-                </Button>
-              </div>
-            }
-          />
+                </div>
+              }
+            />
+          </Card>
         )}
-      </div>
+      </section>
     </div>
   );
 };

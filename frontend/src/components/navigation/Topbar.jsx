@@ -1,10 +1,28 @@
-import { useNavigate } from 'react-router-dom';
-import { Menu, LogOut, User, Activity } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ChevronRight, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
-export const Topbar = ({ onMenuClick }) => {
+const sections = {
+  dashboard: 'Dashboard',
+  investigations: 'Investigations',
+  reports: 'Reports',
+  settings: 'Settings',
+};
+
+const views = {
+  analysis: 'Evidence',
+  results: 'Analysis results',
+  graph: 'Evidence graph',
+  campaign: 'Campaign',
+  report: 'Case report',
+};
+
+export const Topbar = ({ onMenuClick, mobileOpen }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [, section, caseId, view] = pathname.split('/');
+  const currentView = caseId === 'new' ? 'New case' : caseId ? views[view] || 'Case overview' : null;
 
   const handleLogout = () => {
     logout();
@@ -12,53 +30,40 @@ export const Topbar = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="sticky top-0 z-sticky h-16 backdrop-blur-xl bg-[#070b14]/85 border-b border-white/[0.08] select-none transition-all">
-      <div className="h-full flex items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
+    <header className="no-print sticky top-0 z-sticky border-b border-cyber-border bg-cyber-subtle">
+      <div className="mx-auto flex min-h-14 max-w-[94rem] items-center justify-between gap-2 px-4 sm:px-6 xl:px-8">
+        <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
             onClick={onMenuClick}
-            className="lg:hidden p-2 -ml-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.08] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+            className="-ml-2 grid size-11 shrink-0 place-items-center rounded-md text-text-secondary hover:bg-cyber-elevated hover:text-text-primary lg:hidden"
             aria-label="Open mobile navigation menu"
+            aria-controls="workspace-navigation"
+            aria-expanded={mobileOpen}
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="size-5" aria-hidden="true" />
           </button>
 
-          <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-2xs text-cyan-300 font-mono shadow-[0_0_12px_rgba(0,201,200,0.12)]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
-            </span>
-            <Activity className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-            <span className="font-semibold">AI Threat Analysis Pipeline Active</span>
+          <div className="flex min-w-0 items-center gap-2 text-xs text-text-secondary sm:text-sm">
+            <span className={currentView ? 'hidden sm:inline' : 'truncate'}>{sections[section] || 'Workspace'}</span>
+            {currentView && (
+              <>
+                <ChevronRight className="hidden size-3 shrink-0 text-text-muted sm:block" aria-hidden="true" />
+                <span className="truncate text-text-primary">{currentView}</span>
+              </>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="flex items-center gap-2.5 text-xs text-slate-300">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-cyan-400/30 text-cyan-300 flex items-center justify-center font-mono text-xs font-semibold shadow-sm">
-              <User className="w-4 h-4 text-cyan-400" />
-            </div>
-            <div className="hidden sm:block text-left">
-              <p className="font-semibold text-slate-100 leading-none truncate max-w-[140px]">
-                {user?.fullName || 'Analyst'}
-              </p>
-              <p className="text-[10px] text-slate-400 font-mono mt-1 leading-none font-medium">
-                {user?.role?.replace('ROLE_', '') || 'ANALYST'}
-              </p>
-            </div>
-          </div>
-
-          <div className="h-4 w-px bg-white/[0.08]" />
-
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          {user?.fullName && <span className="hidden max-w-36 truncate text-sm text-text-secondary sm:inline">{user.fullName}</span>}
           <button
             type="button"
             onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+            className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-md px-2 text-xs font-medium text-text-secondary hover:bg-cyber-elevated hover:text-text-primary"
             aria-label="Sign out"
-            title="Sign out of PhantomTrace"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="size-4" aria-hidden="true" />
             <span className="hidden md:inline">Sign out</span>
           </button>
         </div>

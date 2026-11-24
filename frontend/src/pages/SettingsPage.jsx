@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
-import { User, Server, Shield, AlertCircle, Cpu, Radio } from 'lucide-react';
+import { Server, Shield, AlertCircle, Cpu, Radio } from 'lucide-react';
 import Card from '../components/common/Card';
 import { FullPageSpinner } from '../components/ui/Spinner';
 import { authService } from '../services/auth/authService';
+
+const integrations = [
+  { name: 'VirusTotal', note: 'Threat reputation for submitted indicators', icon: Radio },
+  { name: 'URLhaus', note: 'Matches submitted URLs against malware distribution records', icon: Server },
+  { name: 'Groq AI', note: 'Produces AI assessments for investigation evidence', icon: Cpu },
+];
 
 export const SettingsPage = () => {
   const [profile, setProfile] = useState(null);
@@ -20,99 +26,66 @@ export const SettingsPage = () => {
   if (loading) return <FullPageSpinner label="Loading settings & configuration…" />;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 min-w-0">
-      <div className="border-b border-white/[0.08] pb-6 min-w-0">
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Settings</h1>
-        <p className="text-xs sm:text-sm text-slate-400 mt-1">
-          Analyst credentials, security preferences, and backend intelligence integrations
-        </p>
-      </div>
+    <div className="min-w-0 max-w-4xl space-y-5">
+      <header>
+        <h1 className="page-heading">Settings</h1>
+        <p className="page-lede">Your analyst profile and the integrations managed by the server.</p>
+      </header>
 
       {error && (
         <div
           role="alert"
-          className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs sm:text-sm flex items-start gap-2.5 shadow-sm"
+          className="flex items-start gap-2 rounded border border-risk-critical/35 bg-risk-critical/10 p-3 text-sm text-text-primary"
         >
-          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <AlertCircle className="mt-0.5 size-4 shrink-0 text-risk-critical" aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
 
-      <Card title="Analyst profile" subtitle="Authenticated identity associated with your investigation cases" className="shadow-card">
-        <div className="space-y-3.5 text-xs sm:text-sm">
+      <Card title="Analyst profile" padded={false}>
+        <dl className="divide-y divide-cyber-border text-sm">
           {[
             { label: 'Full name', value: profile?.fullName },
             { label: 'Email', value: profile?.email },
-            { label: 'Role', value: profile?.role?.replace('ROLE_', '') || 'ANALYST' },
+            { label: 'Role', value: profile?.role?.replace('ROLE_', '') },
           ].map(({ label, value }) => (
             <div
               key={label}
-              className="flex justify-between items-center py-3.5 border-b border-white/[0.06] last:border-0"
+              className="grid gap-1 px-4 py-3 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-3"
             >
-              <div className="flex items-center gap-2.5 text-slate-400 font-medium">
-                <User className="w-4 h-4 text-slate-400" />
-                <span>{label}</span>
-              </div>
-              <span className="text-slate-100 font-semibold font-mono">{value || '—'}</span>
+              <dt className="text-text-secondary">{label}</dt>
+              <dd className="min-w-0 break-words font-medium text-text-primary">{value || '—'}</dd>
             </div>
           ))}
-        </div>
+        </dl>
       </Card>
 
       <Card
         title="Intelligence feeds & AI engine"
-        subtitle="Server-side threat intelligence APIs powering real-time indicator verification"
-        className="shadow-card"
+        subtitle="External verification results appear in the evidence workspace."
+        padded={false}
+        footer={(
+          <p className="field-note flex items-start gap-2">
+            <Shield className="mt-0.5 size-4 shrink-0 text-text-muted" aria-hidden="true" />
+            Integration credentials are managed by the server.
+          </p>
+        )}
       >
-        <div className="space-y-3 text-xs sm:text-sm">
-          {[
-            {
-              name: 'VirusTotal API',
-              note: 'Real-time threat reputation for suspicious domains, IP addresses, and file payloads',
-              status: 'Configured',
-              icon: Radio,
-            },
-            {
-              name: 'URLhaus API',
-              note: 'Malware distribution detection and weaponized URL cross-referencing',
-              status: 'Configured',
-              icon: Server,
-            },
-            {
-              name: 'Groq AI (LLaMA 3.3 70B)',
-              note: 'Deterministic multi-agent reasoning for social engineering & scam classification',
-              status: 'Active',
-              icon: Cpu,
-            },
-          ].map(({ name, note, status, icon: Icon }) => (
-            <div
+        <ul className="divide-y divide-cyber-border text-sm">
+          {integrations.map(({ name, note, icon: Icon }) => (
+            <li
               key={name}
-              className="flex flex-col sm:flex-row sm:items-center justify-between py-4 border-b border-white/[0.06] last:border-0 gap-2.5"
+              className="flex items-start gap-3 px-4 py-3"
             >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2.5 font-bold text-slate-100">
-                  <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-400/25 text-cyan-400">
-                    <Icon className="w-3.5 h-3.5 shrink-0" />
-                  </div>
-                  <span>{name}</span>
-                </div>
-                <p className="text-2xs text-slate-400 mt-1 pl-8 leading-relaxed">{note}</p>
+              <Icon className="mt-0.5 size-4 shrink-0 text-text-muted" aria-hidden="true" />
+              <div className="min-w-0 space-y-0.5">
+                <p className="font-semibold text-text-primary">{name}</p>
+                <p className="field-note">{note}</p>
               </div>
-              <span className="self-start sm:self-center shrink-0 text-2xs font-mono font-semibold px-3 py-1 rounded-full bg-white/[0.04] text-slate-300 border border-white/[0.08]">
-                {status} · Server-managed
-              </span>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </Card>
-
-      <div className="flex items-start gap-3.5 p-4.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-slate-300 text-xs leading-relaxed shadow-sm">
-        <Shield className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
-        <p>
-          API keys and AI credentials are managed exclusively on the Spring Boot backend via server
-          environment variables. They are never exposed to browser memory or client scripts by design.
-        </p>
-      </div>
     </div>
   );
 };

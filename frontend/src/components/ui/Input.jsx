@@ -26,13 +26,13 @@ export const Input = ({
     <div className="w-full">
       {label && (
         <label htmlFor={inputId} className="input-label">
-          {label} {required && <span className="text-rose-400">*</span>}
+          {label} {required && <span aria-hidden="true" className="text-text-muted">*</span>}
         </label>
       )}
       <div className="relative flex items-center">
         {Icon && (
-          <div className="absolute left-3.5 flex items-center pointer-events-none text-slate-400">
-            <Icon className="w-4 h-4" />
+          <div className="absolute left-3 flex items-center pointer-events-none text-text-muted">
+            <Icon className="size-4" aria-hidden="true" />
           </div>
         )}
         <input
@@ -46,7 +46,7 @@ export const Input = ({
             'input-field',
             Icon && 'pl-10',
             isPassword && 'pr-11',
-            error && 'border-rose-500/80 focus:border-rose-500 focus:ring-rose-500/25',
+            error && 'border-risk-critical',
             className
           )}
           {...props}
@@ -56,8 +56,7 @@ export const Input = ({
             type="button"
             onClick={() => setVisible((v) => !v)}
             disabled={disabled}
-            className="absolute right-3 p-1 rounded-md text-slate-400 hover:text-slate-200 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:text-slate-200 transition-colors"
-            tabIndex={-1}
+            className="absolute right-1 grid size-10 place-items-center rounded-md text-text-muted transition-colors hover:bg-cyber-elevated hover:text-text-primary"
             aria-label={visible ? 'Hide password' : 'Show password'}
           >
             {visible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -65,12 +64,12 @@ export const Input = ({
         )}
       </div>
       {error ? (
-        <p id={errorId} className="mt-1.5 text-xs text-rose-400 font-medium flex items-center gap-1.5">
-          <span className="w-1 h-1 rounded-full bg-rose-400" />
+        <p id={errorId} className="mt-1.5 text-xs text-risk-critical font-medium flex items-center gap-1.5">
+          <span className="w-1 h-1 rounded-full bg-risk-critical" />
           {error}
         </p>
       ) : hint ? (
-        <p id={hintId} className="mt-1.5 text-xs text-slate-400">
+        <p id={hintId} className="mt-1.5 text-xs text-text-muted">
           {hint}
         </p>
       ) : null}

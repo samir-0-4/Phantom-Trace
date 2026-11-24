@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
-import { FileText, Info, ArrowRight, AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowRight, FileText, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Card from '../components/common/Card';
-import Button from '../components/common/Button';
-import EmptyState from '../components/ui/EmptyState';
 import { FullPageSpinner } from '../components/ui/Spinner';
 import { investigationService } from '../services/investigation/investigationService';
 import { getApiErrorMessage } from '../services/api/apiClient';
 import { formatDate, titleCase } from '../utils/format';
+import '../styles/report.css';
 
 export const ReportsPage = () => {
   const [investigations, setInvestigations] = useState([]);
@@ -15,85 +13,100 @@ export const ReportsPage = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let active = true;
+
     investigationService
       .list({ size: 50 })
-      .then((page) => setInvestigations(page?.content || []))
-      .catch((err) => setError(getApiErrorMessage(err, 'Could not load investigations.')))
-      .finally(() => setLoading(false));
+      .then((page) => {
+        if (active) setInvestigations(page?.content || []);
+      })
+      .catch((err) => {
+        if (active) setError(getApiErrorMessage(err, 'Could not load investigations.'));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => { active = false; };
   }, []);
 
   if (loading) return <FullPageSpinner label="Loading investigations…" />;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 min-w-0">
-      <div className="border-b border-white/[0.08] pb-6 min-w-0">
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-          Investigation Reports
-        </h1>
-        <p className="mt-1 text-xs sm:text-sm text-slate-400">
-          Generate and print formal forensic reports from each case&apos;s persisted evidence and analysis.
-        </p>
-      </div>
+    <div className="report-manifest">
+      <header className="report-manifest-header">
+        <h1 className="page-heading">Investigation Reports</h1>
+        <p className="page-lede">Open a case to generate, review, or print its forensic dossier.</p>
+      </header>
 
-      {error && (
-        <div
-          role="alert"
-          className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs sm:text-sm text-rose-300 flex items-start gap-2.5 shadow-sm"
-        >
-          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-          <span>{error}</span>
+      {error ? (
+        <div role="alert" className="report-alert">
+          <AlertCircle size={18} aria-hidden="true" />
+          <p>{error}</p>
         </div>
-      )}
-
-      {!error && investigations.length === 0 ? (
-        <Card className="shadow-card">
-          <EmptyState
-            icon={FileText}
-            title="No investigations yet"
-            message="Create an investigation before generating a report."
-            action={
-              <Link to="/investigations/new">
-                <Button variant="outline" size="sm" className="font-semibold shadow-sm">
-                  Create Investigation
-                </Button>
-              </Link>
-            }
-          />
-        </Card>
+      ) : investigations.length === 0 ? (
+        <section className="workstation-panel report-empty">
+          <FileText size={24} aria-hidden="true" />
+          <h2>No investigations yet</h2>
+          <p>Create an investigation before generating a report.</p>
+          <Link to="/investigations/new" className="text-link">
+            <Plus size={16} aria-hidden="true" />
+            Create Investigation
+          </Link>
+        </section>
       ) : (
-        <div className="space-y-3.5">
-          {investigations.map((investigation) => (
-            <Card key={investigation.id} padded={false} interactive className="overflow-hidden shadow-card">
-              <Link
-                to={`/investigations/${investigation.id}/report`}
-                className="flex items-center justify-between gap-4 p-5 hover:bg-white/[0.04] transition-all duration-150 group"
-              >
-                <div className="min-w-0 flex-1 space-y-1">
-                  <h2 className="font-semibold text-slate-100 text-sm sm:text-base group-hover:text-cyan-300 transition-colors truncate">
-                    {investigation.title}
-                  </h2>
-                  <p className="text-xs text-slate-400 font-mono">
-                    {titleCase(investigation.category)} · {formatDate(investigation.createdAt)} ·{' '}
-                    {investigation.evidenceCount || 0} evidence items
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 text-xs font-semibold text-cyan-400 group-hover:text-cyan-300 shrink-0 font-mono">
-                  <span>View report</span>
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </Link>
-            </Card>
-          ))}
-        </div>
-      )}
+        <section className="workstation-panel report-manifest-list" aria-labelledby="case-manifest-heading">
+          <div className="report-manifest-listhead">
+            <h2 id="case-manifest-heading">Case manifest</h2>
+            <p>{investigations.length} {investigations.length === 1 ? 'case' : 'cases'} listed</p>
+          </div>
+          <div className="report-manifest-columns report-manifest-grid" aria-hidden="true">
+            <span>Investigation</span>
+            <span>Category</span>
+            <span>Evidence</span>
+            <span>Case opened</span>
+            <span />
+          </div>
+          <ul role="list">
+            {investigations.map((investigation) => {
+              const evidenceCount = investigation.evidenceCount ?? 0;
 
-      <div className="flex items-start gap-3.5 rounded-2xl border border-cyan-500/25 bg-cyan-500/10 p-4.5 text-slate-300 shadow-sm">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" />
-        <p className="text-xs leading-relaxed">
-          Reports preserve unknown and unavailable information explicitly according to the
-          PhantomTrace Epistemic Standard. Use the report page&apos;s Print / Save PDF action for browser-based export.
-        </p>
-      </div>
+              return (
+                <li key={investigation.id}>
+                  <Link
+                    to={`/investigations/${investigation.id}/report`}
+                    className="report-manifest-row report-manifest-grid"
+                    aria-labelledby={`report-action-${investigation.id} report-case-${investigation.id}`}
+                  >
+                    <span className="report-manifest-case">
+                      <FileText size={18} aria-hidden="true" />
+                      <span className="report-manifest-name">
+                        <strong id={`report-case-${investigation.id}`}>{investigation.title}</strong>
+                        {investigation.syntheticDemo && <span className="report-demo-label">Synthetic demo</span>}
+                      </span>
+                    </span>
+                    <span className="report-manifest-category">{titleCase(investigation.category) || 'Unknown'}</span>
+                    <span className="report-manifest-evidence">
+                      {evidenceCount}
+                      <span className="report-manifest-evidence-label">
+                        {' '}<span className="report-manifest-mobile-label">evidence </span>
+                        {evidenceCount === 1 ? 'item' : 'items'}
+                      </span>
+                    </span>
+                    <time className="report-manifest-date" dateTime={investigation.createdAt || undefined}>
+                      <span className="report-manifest-mobile-label">Opened </span>
+                      {formatDate(investigation.createdAt)}
+                    </time>
+                    <span className="report-manifest-action" id={`report-action-${investigation.id}`}>
+                      View report <ArrowRight size={15} aria-hidden="true" />
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
     </div>
   );
 };

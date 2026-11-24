@@ -1,63 +1,16 @@
 import { statusMeta, riskMeta, categoryLabel } from '../../constants';
-import { cn } from '../../utils/cn';
+import Badge from '../common/Badge';
 
-export const StatusBadge = ({ status, className = '' }) => {
-  const meta = statusMeta(status);
-  const isAnimated = status === 'PROCESSING';
+export const StatusBadge = ({ status, className = '' }) => (
+  <Badge status={status} dot className={className}>{statusMeta(status).label}</Badge>
+);
 
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-2xs font-semibold tracking-wide uppercase border select-none transition-all duration-150',
-        meta.badge,
-        className
-      )}
-    >
-      <span
-        className={cn(
-          'w-1.5 h-1.5 rounded-full shrink-0',
-          meta.dot,
-          isAnimated && 'animate-ping'
-        )}
-      />
-      <span>{meta.label}</span>
-    </span>
-  );
-};
-
-export const RiskBadge = ({ level, className = '' }) => {
-  const meta = riskMeta(level);
-  const isCritical = level === 'CRITICAL';
-
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-2xs font-semibold tracking-wide uppercase border select-none transition-all duration-150',
-        meta.badge,
-        className
-      )}
-    >
-      <span
-        className={cn(
-          'w-1.5 h-1.5 rounded-full shrink-0',
-          meta.dot,
-          isCritical && 'animate-pulse'
-        )}
-      />
-      <span>{meta.label} risk</span>
-    </span>
-  );
-};
+export const RiskBadge = ({ level, className = '' }) => (
+  <Badge status={level} dot className={className}>{riskMeta(level).label} risk</Badge>
+);
 
 export const CategoryBadge = ({ category, className = '' }) => (
-  <span
-    className={cn(
-      'inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-medium bg-[#111728] text-slate-300 border border-white/[0.09] select-none shadow-xs',
-      className
-    )}
-  >
-    {categoryLabel(category)}
-  </span>
+  <Badge className={className}>{categoryLabel(category)}</Badge>
 );
 
 export default StatusBadge;

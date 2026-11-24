@@ -1,14 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, FileText, Printer, AlertCircle, Fingerprint, Network } from 'lucide-react';
-import Card from '../components/common/Card';
+import { AlertCircle, ArrowLeft, FileText, Fingerprint, Printer } from 'lucide-react';
 import Button from '../components/common/Button';
-import Badge from '../components/common/Badge';
-import EmptyState from '../components/ui/EmptyState';
 import { FullPageSpinner } from '../components/ui/Spinner';
 import { getApiErrorMessage } from '../services/api/apiClient';
 import { investigationService } from '../services/investigation/investigationService';
 import { formatDate, formatDateTime, titleCase } from '../utils/format';
+import '../styles/report.css';
 
 const parse = (value) => {
   try {
@@ -18,90 +16,402 @@ const parse = (value) => {
   }
 };
 
-const getDescriptiveEvidenceTitle = (item) => {
-  if (!item) return 'Evidence Item';
-  const typeStr = item.type ? String(item.type) : '';
-  if (typeStr === 'EMAIL' || typeStr === 'EMAIL_MESSAGE') {
-    if (item.senderAddress && item.subject) {
-      return `Email from ${item.senderAddress} ("${item.subject}")`;
-    }
-    if (item.senderAddress) {
-      return `Email from ${item.senderAddress}`;
-    }
-    if (item.subject) {
-      return `Email: "${item.subject}"`;
-    }
-    return 'Email Evidence';
-  }
-  if (typeStr === 'URL' || item.url) {
-    return item.url ? `Target URL: ${item.url}` : 'Target URL Evidence';
-  }
-  if (typeStr === 'TEXT_MESSAGE' || typeStr === 'SMS' || typeStr === 'MESSAGE') {
-    if (item.senderAddress) {
-      return `Text Message from ${item.senderAddress}`;
-    }
-    return 'Suspicious Text Message';
-  }
-  if (typeStr === 'DOCUMENT' || typeStr === 'FILE') {
-    if (item.originalFilename) {
-      return `File: ${item.originalFilename}`;
-    }
-    return 'Document / File Evidence';
-  }
-  if (item.originalFilename) {
-    return `File: ${item.originalFilename}`;
-  }
-  return item.description ? `${titleCase(item.type)}: ${item.description}` : `${titleCase(item.type)} Evidence`;
-};
-
-const ReportFinding = ({ finding }) => (
-  <article className="report-card rounded-2xl border border-white/[0.08] bg-[#0c101c] p-5 space-y-2.5 shadow-sm">
-    <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0 flex-1">
-        <h3 className="font-bold text-slate-100 text-sm">
-          {finding.title || 'Unknown finding'}
-        </h3>
-        <p className="mt-1 text-xs text-slate-400">
-          {finding.description || 'No description available.'}
-        </p>
-      </div>
-      <Badge status={finding.severity}>{titleCase(finding.severity || 'UNKNOWN')}</Badge>
-    </div>
-    <p className="mt-2 text-2xs leading-relaxed text-slate-400">
-      {finding.explanation || 'No explanation available.'}
-    </p>
-    {finding.recommendedAction && (
-      <p className="text-2xs text-cyan-300 font-semibold bg-cyan-500/10 p-2 rounded-lg border border-cyan-500/20">
-        Action: {finding.recommendedAction}
-      </p>
-    )}
-  </article>
+const formatConfidence = (confidence) => (
+  confidence == null ? 'Unknown' : `${Math.round(confidence * 100)}%`
 );
 
-export const InvestigationReportPage = () => {
-  const { id } = useParams();
+const getDescriptiveEvidenceTitle = (item) => {
+  const type = String(item.type || '');
+  if (type === 'EMAIL' || type === 'EMAIL_MESSAGE') {
+    if (item.senderAddress && item.subject) return `Email from ${item.senderAddress} ("${item.subject}")`;
+    if (item.senderAddress) return `Email from ${item.senderAddress}`;
+    if (item.subject) return `Email: "${item.subject}"`;
+    return 'Email Evidence';
+  }
+  if (type === 'URL' || item.url) {
+    return item.url ? `Target URL: ${item.url}` : 'Target URL Evidence';
+  }
+  if (type === 'TEXT_MESSAGE' || type === 'SMS' || type === 'MESSAGE') {
+    return item.senderAddress ? `Text Message from ${item.senderAddress}` : 'Text Message Evidence';
+  }
+  if (item.originalFilename) return `File: ${item.originalFilename}`;
+  if (type === 'DOCUMENT' || type === 'FILE') return 'Document / File Evidence';
+  if (type && item.description) return `${titleCase(type)}: ${item.description}`;
+  return type ? `${titleCase(type)} Evidence` : 'Evidence Item';
+};
+
+const provenanceLabels = [
+  { value: 'VERIFIED', description: 'Deterministic extraction, a cryptographic hash, or a positive provider lookup.' },
+  { value: 'AI_INFERENCE', description: 'An assessment from structured evidence that requires corroboration.' },
+  { value: 'UNKNOWN', description: 'Missing, unavailable, or inconclusive information.' },
+];
+
+const DossierTag = ({ value, children }) => (
+  <span className="dossier-tag" data-value={value || 'UNKNOWN'}>{children || value || 'UNKNOWN'}</span>
+);
+
+const ReportSection = ({ title, children, action }) => (
+  <section className="dossier-section">
+    <div className="dossier-section-heading">
+      <h3>{title}</h3>
+      {action}
+    </div>
+    {children}
+  </section>
+);
+
+const ReportFinding = ({ finding, agentName }) => (
+  <li className="dossier-entry">
+    <div className="dossier-entry-heading">
+      <h4>{finding.title || 'Unknown finding'}</h4>
+      <DossierTag value={finding.severity}>{titleCase(finding.severity || 'UNKNOWN')} severity</DossierTag>
+    </div>
+    <p>{finding.description || 'No description available.'}</p>
+    <div className="dossier-finding-source">
+      <DossierTag value={finding.verificationStatus} />
+      {agentName && <span>{titleCase(agentName)}</span>}
+      <span>Confidence {formatConfidence(finding.confidence)}</span>
+    </div>
+    {finding.evidenceReference && <p className="dossier-meta-line">Evidence reference {finding.evidenceReference}</p>}
+    <p>{finding.explanation || 'No explanation available.'}</p>
+    {finding.recommendedAction && <p><strong>Recommended action</strong> {finding.recommendedAction}</p>}
+  </li>
+);
+
+const CampaignDetails = ({ reconstruction }) => {
+  const sharedIndicators = reconstruction.sharedIndicators || [];
+  const campaignSignals = reconstruction.campaignSignals || [];
+  const connectedInvestigations = reconstruction.connectedInvestigations || [];
+
+  return (
+    <div className="dossier-campaign">
+      {reconstruction.campaignClassification === 'SYNTHETIC_DEMO_CAMPAIGN' && (
+        <p className="dossier-notice dossier-synthetic">
+          <strong>Synthetic demonstration dataset.</strong> This footprint comes from demonstration fixtures
+          with reserved <code>.test</code> domains and TEST-NET addresses.
+        </p>
+      )}
+      {reconstruction.attributionSummary && (
+        <p>{reconstruction.attributionSummary}</p>
+      )}
+      {connectedInvestigations.length > 0 && (
+        <div className="dossier-subsection">
+          <h4>Connected cases ({connectedInvestigations.length})</h4>
+          <ul className="dossier-entries">
+            {connectedInvestigations.map((connected) => (
+              <li key={connected.id} className="dossier-entry">
+                <h5>{connected.title}</h5>
+                <p>{connected.relationshipExplanation}</p>
+                <p className="dossier-meta-line">
+                  Confidence {titleCase(connected.confidence || 'UNKNOWN')} · {connected.sharedIndicatorCount ?? 0} shared indicators
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {campaignSignals.length > 0 && (
+        <div className="dossier-subsection">
+          <h4>Campaign signals ({campaignSignals.length})</h4>
+          <ul className="dossier-entries">
+            {campaignSignals.map((signal, index) => (
+              <li key={index} className="dossier-entry">
+                <p>{signal.description || 'Unspecified coordination signal.'}</p>
+                <p className="dossier-meta-line">
+                  Confidence {titleCase(signal.confidence || 'UNKNOWN')} · Supporting evidence {signal.supportingEvidenceIds?.length ?? 0}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {sharedIndicators.length > 0 && (
+        <div className="dossier-subsection">
+          <h4>Shared indicators ({sharedIndicators.length})</h4>
+          <ul className="dossier-indicators">
+            {sharedIndicators.map((indicator, index) => (
+              <li key={index}>
+                <code>{indicator.value || 'Unknown value'}</code>
+                <span>
+                  {titleCase(indicator.type || 'UNKNOWN')} · {indicator.count ?? 0} evidence items
+                  {indicator.crossInvestigation ? ' · Multiple cases' : ''}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {!campaignSignals.length && !sharedIndicators.length && (
+        <p className="dossier-muted">No cross-evidence campaign signals were detected.</p>
+      )}
+    </div>
+  );
+};
+
+const ForensicDossier = ({ report, content, id }) => {
+  const investigation = content?.investigation;
+  const evidence = content?.evidence || [];
+  const risk = content?.riskAssessment;
+  const relationships = content?.relationships || [];
+  const reconstruction = content?.campaignReconstruction;
+  const executions = evidence.flatMap((item) =>
+    (item.analysis || []).map((execution) => ({
+      agentName: execution.agentName,
+      output: parse(execution.outputJson),
+    }))
+  );
+  const findings = executions.flatMap(({ agentName, output }) =>
+    (output?.findings || []).map((finding) => ({ finding, agentName }))
+  );
+  const summary = executions.find(({ output }) => output?.summary);
+  const indicatorCount = evidence.reduce((count, item) => count + (item.indicators?.length || 0), 0);
+  const digest = /^[a-f0-9]{64}$/i.test(content?.integrityDigest || '') ? content.integrityDigest : null;
+
+  return (
+    <article className="forensic-dossier" aria-labelledby="dossier-title">
+      <header className="dossier-masthead">
+        <p className="dossier-wordmark"><FileText size={16} aria-hidden="true" /> PhantomTrace Digital Forensics Dossier</p>
+        <h2 id="dossier-title">{investigation?.title || 'Untitled investigation'}</h2>
+        <dl className="dossier-case-meta">
+          <div>
+            <dt>Case ID</dt>
+            <dd><code>{investigation?.id || id}</code></dd>
+          </div>
+          <div>
+            <dt>Category</dt>
+            <dd>{titleCase(investigation?.category || 'UNKNOWN')}</dd>
+          </div>
+          <div>
+            <dt>Case opened</dt>
+            <dd><time dateTime={investigation?.createdAt || undefined}>{formatDate(investigation?.createdAt)}</time></dd>
+          </div>
+          <div>
+            <dt>Report generated</dt>
+            <dd><time dateTime={report.createdAt || undefined}>{formatDateTime(report.createdAt)}</time></dd>
+          </div>
+        </dl>
+      </header>
+
+      <ReportSection title="Executive summary">
+        {summary ? (
+          <div className="dossier-summary">
+            <div className="dossier-finding-source">
+              <DossierTag value="AI_INFERENCE" />
+              {summary.agentName && <span>{titleCase(summary.agentName)}</span>}
+            </div>
+            <p>{summary.output.summary}</p>
+          </div>
+        ) : (
+          <p className="dossier-muted">
+            No structured agent summary was saved in this report.
+            {investigation?.overallRiskLevel && !risk && (
+              <> The case recorded {titleCase(investigation.overallRiskLevel)} risk{investigation.riskScore != null && ` with a score of ${investigation.riskScore}/100`}.</>
+            )}
+          </p>
+        )}
+        <dl className="dossier-metrics">
+          <div><dt>Evidence items</dt><dd>{evidence.length}</dd></div>
+          <div><dt>Extracted indicators</dt><dd>{indicatorCount}</dd></div>
+          <div><dt>Findings</dt><dd>{findings.length}</dd></div>
+        </dl>
+      </ReportSection>
+
+      <ReportSection title="Evidence provenance">
+        <dl className="dossier-provenance">
+          {provenanceLabels.map(({ value, description }) => (
+            <div key={value}>
+              <dt><DossierTag value={value} /></dt>
+              <dd>{description}</dd>
+            </div>
+          ))}
+        </dl>
+      </ReportSection>
+
+      <ReportSection title="Overall risk assessment">
+        {risk ? (
+          <div className="dossier-risk">
+            <div className="dossier-risk-readout">
+              <p className="dossier-risk-score">
+                {risk.score ?? 'Unknown'}
+                {risk.score != null && <span> / 100</span>}
+              </p>
+              <DossierTag value={risk.category}>{titleCase(risk.category || 'UNKNOWN')}</DossierTag>
+              <p className="dossier-meta-line">Confidence {formatConfidence(risk.confidence)}</p>
+            </div>
+            {risk.explanation && <p>{risk.explanation}</p>}
+            {risk.disclaimer && <p className="dossier-muted">{risk.disclaimer}</p>}
+            {risk.contributingSignals?.length > 0 && (
+              <div className="dossier-subsection">
+                <h4>Itemized risk contributions ({risk.contributingSignals.length})</h4>
+                <ul className="dossier-entries">
+                  {risk.contributingSignals.map((signal, index) => (
+                    <li className="dossier-risk-signal" key={signal.id || index}>
+                      <strong>{signal.weight > 0 ? '+' : ''}{signal.weight}</strong>
+                      <span>{signal.signal}</span>
+                      <DossierTag value={signal.epistemicBasis} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="dossier-muted">No risk assessment was available when this report was generated.</p>
+        )}
+      </ReportSection>
+
+      <ReportSection title={`Evidence (${evidence.length})`}>
+        {evidence.length ? (
+          <ul className="dossier-entries">
+            {evidence.map((item) => (
+              <li key={item.id} className="dossier-entry">
+                <h4>{getDescriptiveEvidenceTitle(item)}</h4>
+                <p>{item.description || 'No description provided.'}</p>
+                {item.indicators?.length > 0 && (
+                  <ul className="dossier-indicators">
+                    {item.indicators.map((indicator) => (
+                      <li key={indicator.id}>
+                        <code>{indicator.normalizedValue || indicator.originalValue || 'Unknown value'}</code>
+                        <span>
+                          {titleCase(indicator.type || 'UNKNOWN')}
+                          {indicator.extractionMethod && ` · ${titleCase(indicator.extractionMethod)}`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="dossier-muted">No evidence was attached when this report was generated.</p>
+        )}
+      </ReportSection>
+
+      <ReportSection title={`Findings (${findings.length})`}>
+        {findings.length ? (
+          <ul className="dossier-entries">
+            {findings.map(({ finding, agentName }, index) => (
+              <ReportFinding key={index} finding={finding} agentName={agentName} />
+            ))}
+          </ul>
+        ) : (
+          <p className="dossier-muted">No structured findings were persisted.</p>
+        )}
+      </ReportSection>
+
+      <ReportSection title={`Evidence relationships (${relationships.length})`}>
+        {relationships.length ? (
+          <ul className="dossier-entries">
+            {relationships.map((relationship) => (
+              <li key={relationship.id} className="dossier-entry">
+                <h4>{titleCase(relationship.type || relationship.relationshipType || 'UNKNOWN')}</h4>
+                <p>{relationship.explanation || 'No explanation available.'}</p>
+                <div className="dossier-finding-source">
+                  <DossierTag value={relationship.verificationStatus} />
+                  <span>Confidence {formatConfidence(relationship.confidence)}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="dossier-muted">No supported relationships were found.</p>
+        )}
+      </ReportSection>
+
+      <ReportSection
+        title="Campaign reconstruction"
+        action={reconstruction?.campaignClassification && (
+          <DossierTag value={reconstruction.campaignClassification}>
+            {titleCase(reconstruction.campaignClassification)}
+          </DossierTag>
+        )}
+      >
+        {reconstruction ? (
+          <CampaignDetails reconstruction={reconstruction} />
+        ) : (
+          <p className="dossier-muted">No campaign reconstruction was saved in this snapshot.</p>
+        )}
+      </ReportSection>
+
+      <ReportSection title="Report integrity">
+        <div className="dossier-integrity">
+          <Fingerprint size={23} aria-hidden="true" />
+          <div>
+            <h4>SHA-256 snapshot digest</h4>
+            {digest ? (
+              <>
+                <code>SHA256:{digest}</code>
+                <p>This fingerprint covers the canonical report JSON before the digest field was added.</p>
+              </>
+            ) : (
+              <p className="dossier-muted">No SHA-256 digest was recorded.</p>
+            )}
+          </div>
+        </div>
+        <dl className="dossier-case-meta dossier-record-meta">
+          <div>
+            <dt>Report ID</dt>
+            <dd>{report.id ? <code>{report.id}</code> : 'Unknown'}</dd>
+          </div>
+          <div>
+            <dt>Generating system</dt>
+            <dd>PhantomTrace Automated Engine</dd>
+          </div>
+        </dl>
+        <div className="dossier-signature">
+          <p>Investigator signature</p>
+          <p>Date</p>
+        </div>
+      </ReportSection>
+
+      <footer className="dossier-footer">
+        <h3>Limitations</h3>
+        {content?.limitations?.length > 0 && (
+          <ul>
+            {content.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}
+          </ul>
+        )}
+        <p>
+          {content?.disclaimer || 'This report supports investigation and verification.'}
+          {' '}A qualified examiner should review the findings before any use in legal proceedings.
+        </p>
+      </footer>
+    </article>
+  );
+};
+
+const InvestigationReport = ({ id }) => {
   const [report, setReport] = useState(null);
   const [campaign, setCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
 
-  const load = useCallback(async () => {
-    const [reports, campaignData] = await Promise.all([
-      investigationService.listReports(id),
-      typeof investigationService.getCampaign === 'function'
-        ? investigationService.getCampaign(id).catch(() => null)
-        : Promise.resolve(null),
-    ]);
-    setReport(reports[0] || null);
-    setCampaign(campaignData);
-  }, [id]);
-
   useEffect(() => {
-    load()
-      .catch((err) => setError(getApiErrorMessage(err, 'Could not load reports.')))
-      .finally(() => setLoading(false));
-  }, [load]);
+    let active = true;
+    const currentCampaign = typeof investigationService.getCampaign === 'function'
+      ? investigationService.getCampaign(id).catch(() => null)
+      : Promise.resolve(null);
+
+    Promise.all([investigationService.listReports(id), currentCampaign])
+      .then(([reports, campaignData]) => {
+        if (!active) return;
+        setReport(reports[0] || null);
+        setCampaign(campaignData);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setReport(null);
+        setCampaign(null);
+        setError(getApiErrorMessage(err, 'Could not load reports.'));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [id]);
 
   const generate = async () => {
     setGenerating(true);
@@ -117,440 +427,67 @@ export const InvestigationReportPage = () => {
   };
 
   if (loading) return <FullPageSpinner label="Loading investigation report…" />;
+
   const content = parse(report?.contentJson);
-  const investigation = content?.investigation;
-  const risk = content?.riskAssessment;
-  const evidence = content?.evidence || [];
-  const findings = evidence.flatMap((item) =>
-    (item.analysis || []).flatMap((execution) => parse(execution.outputJson)?.findings || [])
-  );
-  const summaries = evidence
-    .flatMap((item) => (item.analysis || []).map((execution) => parse(execution.outputJson)))
-    .filter((item) => item?.summary);
-  const relationships = content?.relationships || [];
-  const campaignReconstruction = campaign || content?.campaignReconstruction;
-  const sharedIndicators = campaignReconstruction?.sharedIndicators || [];
-  const campaignSignals = campaignReconstruction?.campaignSignals || [];
-  const connectedInvestigations = campaignReconstruction?.connectedInvestigations || [];
-  const campaignClassification = campaignReconstruction?.campaignClassification || (sharedIndicators.length > 0 ? 'POSSIBLE' : 'ISOLATED_INCIDENT');
-  const attributionSummary = campaignReconstruction?.attributionSummary;
+  const reconstruction = content?.campaignReconstruction;
+  const hasDifferentCurrentCampaign = campaign && JSON.stringify(campaign) !== JSON.stringify(reconstruction);
 
   return (
-    <div className="report-page mx-auto max-w-5xl space-y-6 min-w-0">
-      <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-6 min-w-0">
+    <div className="report-workspace">
+      <header className="report-workspace-header no-print">
         <div>
-          <Link
-            to={`/investigations/${id}`}
-            className="mb-2 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white font-mono transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to investigation
+          <Link to={`/investigations/${id}`} className="text-link report-back-link">
+            <ArrowLeft size={16} aria-hidden="true" /> Back to investigation
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-            Investigation report
-          </h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-400 font-mono">
-            Persisted forensic report snapshot · browser print &amp; PDF export supported
-          </p>
+          <h1 className="page-heading">Investigation report</h1>
+          <p className="page-lede">Generate a saved snapshot of the case evidence and analysis.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => window.print()}
-            disabled={!report}
-            className="font-semibold inline-flex items-center gap-2 shadow-sm"
-          >
-            <Printer className="h-4 w-4" /> <span>Print / Save PDF</span>
+        <div className="report-toolbar">
+          <Button variant="secondary" onClick={() => window.print()} disabled={!content}>
+            <Printer size={16} aria-hidden="true" />
+            Print / Save PDF
           </Button>
-          <Button
-            onClick={generate}
-            loading={generating}
-            size="sm"
-            className="font-semibold inline-flex items-center gap-2 shadow-md"
-          >
-            <FileText className="h-4 w-4" />
-            <span>{report ? 'Regenerate report' : 'Generate report'}</span>
+          <Button onClick={generate} loading={generating}>
+            <FileText size={16} aria-hidden="true" />
+            {report ? 'Regenerate report' : 'Generate report'}
           </Button>
         </div>
-      </div>
+      </header>
 
-      {error && (
-        <div
-          role="alert"
-          className="no-print rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs sm:text-sm text-rose-300 flex items-start gap-2.5 shadow-sm"
-        >
-          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-          <span>{error}</span>
+      {(error || (report && !content)) && (
+        <div role="alert" className="report-alert no-print">
+          <AlertCircle size={18} aria-hidden="true" />
+          <p>{error || 'The saved report could not be read. Regenerate the report to create a new snapshot.'}</p>
         </div>
       )}
 
-      {!report ? (
-        <Card className="shadow-card">
-          <EmptyState
-            icon={FileText}
-            title="No report generated"
-            message="Generate a report after submitting and analyzing evidence."
-            action={
-              <Button onClick={generate} loading={generating} size="sm" className="shadow-md font-semibold">
-                Generate report
-              </Button>
-            }
-          />
-        </Card>
-      ) : (
-        <article className="space-y-6 print:bg-white print:text-black">
-          <header className="report-card border-b border-white/[0.08] pb-6 print:border-slate-300">
-            <p className="text-2xs font-mono font-bold uppercase tracking-[0.2em] text-cyan-400 print:text-slate-600">
-              PhantomTrace Digital Forensics Dossier
-            </p>
-            <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold text-white print:text-black tracking-tight">
-              {investigation?.title || 'Untitled investigation'}
-            </h1>
-            <p className="mt-2 text-xs sm:text-sm text-slate-400 print:text-slate-600 font-mono">
-              ID: {investigation?.id || id} · Created: {formatDate(investigation?.createdAt)} ·
-              Category: {titleCase(investigation?.category || 'UNKNOWN')}
-            </p>
-            <p className="mt-1 text-2xs text-slate-400 print:text-slate-600 font-mono">
-              Report generated {formatDateTime(report.createdAt)} · Epistemic Truth Standard
-            </p>
-          </header>
-
-          {/* Epistemic Truth Standard Section */}
-          <section className="grid gap-3 sm:grid-cols-3 text-xs font-mono print:text-black">
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3.5 space-y-1 print:border-slate-300 print:bg-slate-50">
-              <span className="font-bold text-emerald-300 print:text-emerald-700 flex items-center gap-1.5">
-                ● VERIFIED
-              </span>
-              <p className="text-2xs text-slate-300 print:text-slate-600 font-sans">
-                Deterministic regex extraction, cryptographic hashes, and positive threat intelligence hits.
-              </p>
-            </div>
-            <div className="rounded-xl border border-purple-500/30 bg-purple-950/20 p-3.5 space-y-1 print:border-slate-300 print:bg-slate-50">
-              <span className="font-bold text-purple-300 print:text-purple-700 flex items-center gap-1.5">
-                ▲ AI_INFERENCE
-              </span>
-              <p className="text-2xs text-slate-300 print:text-slate-600 font-sans">
-                Bounded hypotheses generated by specialized AI agents from structured evidence.
-              </p>
-            </div>
-            <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-3.5 space-y-1 print:border-slate-300 print:bg-slate-50">
-              <span className="font-bold text-amber-300 print:text-amber-700 flex items-center gap-1.5">
-                ? UNKNOWN
-              </span>
-              <p className="text-2xs text-slate-300 print:text-slate-600 font-sans">
-                Missing, unconfigured, or inconclusive intelligence feeds (never assumed safe).
-              </p>
-            </div>
-          </section>
-
-          <Card title="Executive summary" className="report-card shadow-card">
-            {summaries[0]?.summary ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Badge status="AI_INFERENCE">AI_INFERENCE</Badge>
-                </div>
-                <p className="text-xs sm:text-sm leading-relaxed text-slate-200 print:text-slate-800 whitespace-pre-wrap font-sans">
-                  {summaries[0].summary}
-                </p>
+      {report && content ? (
+        <>
+          <ForensicDossier report={report} content={content} id={id} />
+          {hasDifferentCurrentCampaign && (
+            <details className="report-live-campaign workstation-panel no-print" open={!reconstruction || undefined}>
+              <summary>Live campaign reconstruction</summary>
+              <div className="forensic-dossier">
+                <p className="dossier-notice">This live view is separate from the saved dossier and its SHA-256 digest.</p>
+                <CampaignDetails reconstruction={campaign} />
               </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-slate-800 border border-slate-700 px-2 py-0.5 text-2xs font-mono text-slate-400">
-                    AI analysis not run
-                  </span>
-                  <Badge status="VERIFIED">VERIFIED / DETERMINISTIC</Badge>
-                </div>
-                <p className="text-xs sm:text-sm leading-relaxed text-slate-200 print:text-slate-800 font-sans">
-                  {content?.deterministicExecutiveSummary ||
-                    `Deterministic forensic baseline: ${evidence.length} evidence artifact(s) evaluated. Overall risk level assessed as ${investigation?.overallRiskLevel || 'UNKNOWN'} (score: ${investigation?.riskScore || 0}/100). Campaign reconstruction classified footprint as ${campaignClassification}. AI multi-agent reasoning was not executed; all metrics derive strictly from deterministic parsing rules, cryptographic digests, and threat intelligence feeds.`}
-                </p>
-              </div>
-            )}
-          </Card>
-
-          <Card title="Overall risk assessment" className="report-card shadow-card">
-            {risk ? (
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center gap-4">
-                  <span className="text-3xl sm:text-4xl font-mono font-extrabold text-white print:text-black">
-                    {risk.score}/100
-                  </span>
-                  <Badge status={risk.category}>{titleCase(risk.category)}</Badge>
-                  <span className="text-xs font-mono text-slate-400">
-                    Confidence: {Math.round((risk.confidence || 0) * 100)}%
-                  </span>
-                </div>
-                <p className="text-xs sm:text-sm leading-relaxed text-slate-200 print:text-slate-800">
-                  {risk.explanation}
-                </p>
-                {risk.disclaimer && (
-                  <p className="text-2xs font-mono text-amber-300 print:text-slate-600 bg-amber-950/20 p-3 rounded-xl border border-amber-900/40">
-                    {risk.disclaimer}
-                  </p>
-                )}
-                {risk.contributingSignals?.length > 0 && (
-                  <div className="mt-4 space-y-2 border-t border-white/[0.08] pt-4 print:border-slate-300">
-                    <h4 className="text-2xs font-mono font-bold uppercase tracking-wider text-slate-400 print:text-slate-700">
-                      Itemized Risk Contributions ({risk.contributingSignals.length} signals)
-                    </h4>
-                    <div className="space-y-1.5">
-                      {risk.contributingSignals.map((sig, idx) => (
-                        <div
-                          key={sig.id || idx}
-                          className="flex items-center justify-between gap-3 rounded-lg border border-white/[0.05] bg-white/[0.02] p-2 text-xs font-mono print:border-slate-300 print:bg-slate-50"
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="font-bold text-amber-400 print:text-amber-800">
-                              +{sig.weight}
-                            </span>
-                            <span className="text-slate-200 print:text-black truncate">
-                              {sig.signal}
-                            </span>
-                          </div>
-                          <div className="shrink-0">
-                            <Badge status={sig.epistemicBasis || (sig.signalKey?.startsWith('IMPERSONATION') ? 'AI_INFERENCE' : 'VERIFIED')}>
-                              {sig.epistemicBasis || (sig.signalKey?.startsWith('IMPERSONATION') ? 'AI_INFERENCE' : 'VERIFIED')}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-xs sm:text-sm text-slate-400">
-                Unknown — no risk assessment was available when this report was generated.
-              </p>
-            )}
-          </Card>
-
-          <Card title={`Evidence (${evidence.length})`} className="report-card shadow-card">
-            {evidence.length ? (
-              <div className="space-y-3">
-                {evidence.map((item) => (
-                  <div
-                    key={item.id}
-                    className="report-card rounded-2xl border border-white/[0.08] bg-[#090e1a] p-4 space-y-2"
-                  >
-                    <h3 className="font-bold text-slate-100 print:text-black text-sm">
-                      {getDescriptiveEvidenceTitle(item)}
-                    </h3>
-                    <p className="text-xs text-slate-400 font-mono">
-                      {item.description || 'No description provided.'}
-                    </p>
-                    {item.indicators?.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {item.indicators.map((indicator) => (
-                          <span
-                            key={indicator.id}
-                            className="rounded-full bg-[#111728] px-2.5 py-0.5 text-2xs font-mono text-slate-300 border border-white/[0.08]"
-                          >
-                            {titleCase(indicator.type)}:{' '}
-                            {indicator.normalizedValue || indicator.originalValue}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs sm:text-sm text-slate-400">Unknown — no evidence was attached.</p>
-            )}
-          </Card>
-
-          <Card title={`Findings (${findings.length})`} className="shadow-card">
-            {findings.length ? (
-              <div className="space-y-3.5">
-                {findings.map((finding, index) => (
-                  <ReportFinding key={`${finding.title}-${index}`} finding={finding} />
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs sm:text-sm text-slate-400">
-                Unknown — no structured findings were persisted.
-              </p>
-            )}
-          </Card>
-
-          <Card title={`Evidence relationships (${relationships.length})`} className="shadow-card">
-            {relationships.length ? (
-              <div className="space-y-3">
-                {relationships.map((relationship) => (
-                  <div
-                    key={relationship.id}
-                    className="report-card rounded-2xl border border-white/[0.08] bg-[#090e1a] p-3.5 text-xs space-y-1.5"
-                  >
-                    <p className="font-bold text-slate-100">
-                      {titleCase(relationship.type || relationship.relationshipType)}
-                    </p>
-                    <p className="text-slate-300">
-                      {relationship.explanation || 'No explanation available.'}
-                    </p>
-                    <p className="text-2xs font-mono text-slate-400">
-                      Verification: {titleCase(relationship.verificationStatus || 'UNKNOWN')} ·
-                      Confidence:{' '}
-                      {relationship.confidence == null
-                        ? 'Unknown'
-                        : `${Math.round(relationship.confidence * 100)}%`}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs sm:text-sm text-slate-400">
-                Unknown — no supported relationships were found.
-              </p>
-            )}
-          </Card>
-
-          <Card
-            title="Campaign reconstruction"
-            subtitle="Cross-case provenance and infrastructure attribution"
-            className="shadow-card"
-            headerAction={
-              <Badge status={campaignClassification === 'CONFIRMED' ? 'HIGH' : campaignClassification === 'SYNTHETIC_DEMO_CAMPAIGN' ? 'SYNTHETIC_DEMO' : campaignClassification === 'PROBABLE' ? 'MEDIUM' : 'LOW'}>
-                {campaignClassification.replace(/_/g, ' ')}
-              </Badge>
-            }
-          >
-            {campaignReconstruction ? (
-              <div className="space-y-5">
-                {campaignClassification === 'SYNTHETIC_DEMO_CAMPAIGN' && (
-                  <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3 text-xs text-purple-300 font-mono">
-                    <strong>DEMONSTRATION DATASET:</strong> This campaign footprint is reconstructed from synthetic demonstration fixtures using RFC 2606 (.test) and RFC 5737 (TEST-NET) indicators. It illustrates cross-case correlation mechanics and does not represent real-world threat actor attribution.
-                  </div>
-                )}
-                {attributionSummary && (
-                  <div className="rounded-xl border border-white/[0.08] bg-[#0c101c] p-4 text-xs text-slate-300 leading-relaxed font-sans print:border-slate-300 print:text-black">
-                    <span className="font-mono text-2xs uppercase tracking-wider text-cyan-400 block mb-1">
-                      Attribution Assessment
-                    </span>
-                    {attributionSummary}
-                  </div>
-                )}
-
-                {connectedInvestigations.length > 0 && (
-                  <div className="space-y-2.5">
-                    <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-300">
-                      <Network className="h-4 w-4" aria-hidden="true" />
-                      Connected Campaign Dossiers ({connectedInvestigations.length})
-                    </h3>
-                    <div className="grid gap-2.5 md:grid-cols-2">
-                      {connectedInvestigations.map((inv) => (
-                        <div
-                          key={inv.id}
-                          className="report-card rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.06] p-3.5 space-y-1.5"
-                        >
-                          <p className="text-xs font-bold text-white print:text-black">
-                            {inv.title}
-                          </p>
-                          <p className="text-2xs text-slate-300 print:text-slate-700">
-                            {inv.relationshipExplanation}
-                          </p>
-                          <p className="text-2xs font-mono text-cyan-400">
-                            Confidence: {inv.confidence} · {inv.sharedIndicatorCount} Shared Indicator(s)
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {campaignSignals.length > 0 && (
-                  <div className="space-y-2.5">
-                    <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-300">
-                      <Network className="h-4 w-4" aria-hidden="true" />
-                      Campaign signals
-                    </h3>
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {campaignSignals.map((signal, index) => (
-                        <div
-                          key={`${signal.description || 'signal'}-${index}`}
-                          className="report-card rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.06] p-4 space-y-2"
-                        >
-                          <p className="text-xs leading-relaxed text-slate-200 print:text-black">
-                            {signal.description || 'Unspecified coordination signal.'}
-                          </p>
-                          <p className="text-2xs font-mono text-cyan-300">
-                            Confidence: {titleCase(signal.confidence || 'UNKNOWN')} ·
-                            Supporting evidence: {signal.supportingEvidenceIds?.length || 0}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {sharedIndicators.length > 0 && (
-                  <div className="space-y-2.5">
-                    <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-violet-300">
-                      <Fingerprint className="h-4 w-4" aria-hidden="true" />
-                      Shared indicators
-                    </h3>
-                    <div className="grid gap-2 md:grid-cols-2">
-                      {sharedIndicators.map((indicator, index) => (
-                        <div
-                          key={`${indicator.type || 'indicator'}-${indicator.value || index}`}
-                          className="rounded-xl border border-white/[0.08] bg-[#090e1a] p-3 print:border-slate-300 print:bg-white"
-                        >
-                          <p className="break-all text-xs font-mono text-slate-200 print:text-black font-semibold">
-                            {indicator.value || 'Unknown value'}
-                          </p>
-                          <p className="mt-1 text-2xs font-mono text-slate-400 print:text-slate-600">
-                            {titleCase(indicator.type || 'UNKNOWN')} · seen in {indicator.count || 0} evidence items
-                            {indicator.crossInvestigation ? ' (Multi-Case)' : ''}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {!campaignSignals.length && !sharedIndicators.length && (
-                  <p className="text-xs text-slate-400">
-                    No cross-evidence campaign signals were detected.
-                  </p>
-                )}
-              </div>
-            ) : (
-              <p className="text-xs text-slate-400">
-                Campaign reconstruction is unavailable for this investigation.
-              </p>
-            )}
-          </Card>
-
-          {/* Forensic Sign-Off Box for print and official record */}
-          <div className="report-card rounded-2xl border border-white/[0.1] bg-[#0c101c] p-5 font-mono text-xs space-y-3 print:border-slate-300 print:bg-slate-50 print:text-black">
-            <p className="font-bold uppercase tracking-wider text-slate-300 print:text-slate-800">
-              Forensic Examiner Verification &amp; Chain of Custody
-            </p>
-            <div className="grid grid-cols-2 gap-4 pt-2 text-2xs text-slate-400 print:text-slate-700">
-              <div>
-                <span className="block text-slate-500">EXAMINER IDENTIFIER:</span>
-                <span className="font-semibold text-slate-200 print:text-black">PhantomTrace Automated Engine v0.1.0</span>
-              </div>
-              <div>
-                <span className="block text-slate-500">INTEGRITY DIGEST:</span>
-                <span className="font-semibold text-slate-200 print:text-black truncate block font-mono text-2xs">
-                  {content?.integrityDigest
-                    ? `SHA256:${content.integrityDigest}`
-                    : (investigation?.id ? `REPORT:${investigation.id}` : 'UNKNOWN')}
-                </span>
-              </div>
-            </div>
-            <div className="border-t border-dashed border-white/10 pt-4 mt-2 print:border-slate-300">
-              <span className="text-2xs text-slate-500 block">INVESTIGATOR SIGNATURE: ___________________________________ &nbsp;&nbsp;&nbsp;&nbsp; DATE: _______________</span>
-            </div>
-          </div>
-
-          <footer className="report-card rounded-2xl border border-amber-900/40 bg-amber-950/20 p-4 text-2xs text-amber-300 font-mono leading-relaxed print:border-slate-300 print:bg-white print:text-slate-600">
-            ⚠️ <strong>Disclaimer:</strong> This report is AI-assisted analysis generated by PhantomTrace. It is <strong>not a certified legal forensic report</strong> and should not be used as sole evidence in legal proceedings. All AI-generated findings are labelled <strong>AI_INFERENCE</strong> and reflect probabilistic assessments only. Consult a qualified digital forensics professional for legally admissible investigations.
-          </footer>
-        </article>
+            </details>
+          )}
+        </>
+      ) : !error && !report && (
+        <section className="workstation-panel report-empty no-print">
+          <FileText size={24} aria-hidden="true" />
+          <h2>No report generated</h2>
+          <p>Submit and analyze case evidence, then generate the report.</p>
+        </section>
       )}
     </div>
   );
+};
+
+export const InvestigationReportPage = () => {
+  const { id } = useParams();
+  return <InvestigationReport key={id} id={id} />;
 };
 
 export default InvestigationReportPage;

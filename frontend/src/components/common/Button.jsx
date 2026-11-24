@@ -1,31 +1,26 @@
 import { cn } from '../../utils/cn';
 import { Spinner } from '../ui/Spinner';
 
-const BASE_BUTTON_CLASSES =
-  'relative inline-flex items-center justify-center gap-2 font-medium tracking-tight transition-all duration-150 ease-out select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#04060a] focus-visible:ring-cyan-400 disabled:opacity-45 disabled:pointer-events-none active:scale-[0.98]';
+const base = 'inline-flex shrink-0 items-center justify-center gap-2 rounded-md border font-semibold transition-colors duration-fast disabled:cursor-not-allowed disabled:opacity-50';
 
-const SIZES = {
-  xs: 'px-2.5 py-1 text-2xs min-h-[28px] rounded-lg',
-  sm: 'px-3.5 py-1.5 text-xs min-h-[34px] rounded-lg',
-  md: 'px-4.5 py-2 text-sm min-h-[40px] rounded-xl',
-  lg: 'px-6 py-2.5 text-sm sm:text-base min-h-[46px] rounded-xl font-semibold',
-  icon: 'p-2 w-9 h-9 min-h-[36px] rounded-xl',
+const sizes = {
+  xs: 'min-h-8 px-2 text-xs',
+  sm: 'min-h-9 px-3 text-xs',
+  md: 'min-h-10 px-4 text-sm',
+  lg: 'min-h-11 px-4 text-sm',
+  icon: 'h-10 w-10',
 };
 
-const VARIANTS = {
-  primary:
-    'bg-gradient-to-b from-cyan-400 to-cyan-600 hover:from-cyan-300 hover:to-cyan-500 active:from-cyan-500 active:to-cyan-700 text-slate-950 border border-cyan-300/50 shadow-[0_2px_12px_rgba(0,201,200,0.35),inset_0_1px_0_0_rgba(255,255,255,0.35)] hover:shadow-[0_4px_20px_rgba(0,201,200,0.5),inset_0_1px_0_0_rgba(255,255,255,0.3)]',
-  secondary:
-    'bg-[#0f172a] hover:bg-[#16223d] active:bg-[#0c1322] text-slate-200 hover:text-white border border-white/[0.12] hover:border-white/[0.22] shadow-[0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.08)]',
-  danger:
-    'bg-gradient-to-b from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 active:from-rose-600 active:to-rose-700 text-white border border-rose-400/35 shadow-[0_2px_12px_rgba(244,63,94,0.35),inset_0_1px_0_0_rgba(255,255,255,0.2)] hover:shadow-[0_4px_20px_rgba(244,63,94,0.5)] focus-visible:ring-rose-500',
-  ghost:
-    'text-slate-300 hover:text-white hover:bg-white/[0.08] active:bg-white/[0.12] border border-transparent',
-  outline:
-    'border border-white/[0.14] hover:border-cyan-400/60 text-slate-200 hover:text-cyan-300 bg-[#0a0f1d]/70 hover:bg-cyan-500/[0.08] active:bg-cyan-500/15 shadow-[0_2px_8px_rgba(0,0,0,0.4)]',
+const variants = {
+  primary: 'border-transparent bg-cyan-primary text-cyber-canvas hover:bg-cyan-muted',
+  secondary: 'border-cyber-border-light bg-cyber-surface text-text-primary hover:bg-cyber-elevated',
+  danger: 'border-risk-critical/45 bg-risk-critical/10 text-risk-critical hover:bg-risk-critical/20',
+  ghost: 'border-transparent text-text-secondary hover:bg-cyber-elevated hover:text-text-primary',
+  outline: 'border-cyber-border-light text-text-primary hover:border-cyan-primary/60 hover:bg-cyan-primary/10',
 };
 
 export const Button = ({
+  as: Element = 'button',
   children,
   type = 'button',
   variant = 'primary',
@@ -33,21 +28,17 @@ export const Button = ({
   loading = false,
   disabled = false,
   className = '',
-  onClick,
   ...props
 }) => (
-  <button
-    type={type}
-    disabled={disabled || loading}
-    onClick={onClick}
-    className={cn(BASE_BUTTON_CLASSES, SIZES[size] || SIZES.md, VARIANTS[variant] || VARIANTS.primary, className)}
+  <Element
+    {...(Element === 'button' ? { type, disabled: disabled || loading } : {})}
+    aria-busy={loading || undefined}
+    className={cn(base, sizes[size] || sizes.md, variants[variant] || variants.primary, className)}
     {...props}
   >
-    {loading && <Spinner className="w-3.5 h-3.5 text-current shrink-0" label="Processing…" />}
-    <span className={cn('inline-flex items-center gap-1.5', loading && 'opacity-80')}>
-      {children}
-    </span>
-  </button>
+    {loading && <Spinner className="size-4 shrink-0 text-current" />}
+    {children}
+  </Element>
 );
 
 export default Button;

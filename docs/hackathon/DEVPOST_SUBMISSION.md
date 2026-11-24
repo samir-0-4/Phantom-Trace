@@ -12,7 +12,7 @@ Complete bracketed fields after verification. Submit the private testing instruc
 | Bonus category | `[Select only the applicable bonus categories, or leave blank.]` |
 | Functional application | [PhantomTrace](https://phantomtrace04.vercel.app) |
 | Public source repository | [PhantomTrace on GitHub](https://github.com/samir-0-4/Phantom-Trace) |
-| Public YouTube video | `[Insert the publicly visible YouTube URL after the release video is approved and published.]` |
+| Public YouTube video | [PhantomTrace Demo Walkthrough](https://youtu.be/Xlnl08geuQg) |
 | Built with | Kiro IDE, React, React Flow, Java, Spring Boot, PostgreSQL, Flyway, Groq, jqwik |
 
 ## Project description

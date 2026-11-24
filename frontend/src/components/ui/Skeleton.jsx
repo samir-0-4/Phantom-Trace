@@ -4,8 +4,7 @@ export const Skeleton = ({ className = '', ...props }) => {
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-lg bg-white/[0.04] border border-white/[0.04]',
-        'after:absolute after:inset-0 after:-translate-x-full after:animate-shimmer after:bg-gradient-to-r after:from-transparent after:via-white/[0.08] after:to-transparent',
+        'rounded-md bg-cyber-elevated',
         className
       )}
       {...props}
@@ -19,7 +18,7 @@ export const CardSkeleton = ({ count = 1 }) => {
       {Array.from({ length: count }).map((_, idx) => (
         <div
           key={idx}
-          className="rounded-2xl border border-white/[0.08] bg-[#0c101c]/90 p-5 space-y-4 shadow-card"
+          className="workstation-panel space-y-4 p-4 sm:p-5"
         >
           <div className="flex items-center justify-between">
             <Skeleton className="h-4 w-32" />
@@ -40,7 +39,7 @@ export const TableRowSkeleton = ({ rows = 5 }) => {
   return (
     <>
       {Array.from({ length: rows }).map((_, idx) => (
-        <tr key={idx} className="border-b border-white/[0.06]">
+        <tr key={idx} className="border-b border-cyber-border">
           <td className="py-4 px-6">
             <Skeleton className="h-4 w-48" />
             <Skeleton className="h-3 w-24 mt-1.5" />

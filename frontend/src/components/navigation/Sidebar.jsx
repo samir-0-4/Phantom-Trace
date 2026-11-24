@@ -1,85 +1,62 @@
-import { NavLink } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  FolderSearch,
-  PlusCircle,
-  FileText,
-  Settings,
-} from 'lucide-react';
+import { Link, NavLink, useMatch } from 'react-router-dom';
+import { FileText, FolderSearch, LayoutDashboard, Plus, Settings } from 'lucide-react';
 import { PhantomIcon } from '../ui/PhantomIcon';
 import { cn } from '../../utils/cn';
 
-const NAV = [
+const navigation = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/investigations', label: 'Investigations', icon: FolderSearch },
-  { to: '/investigations/new', label: 'New Investigation', icon: PlusCircle },
+  { to: '/investigations/new', label: 'New Investigation', icon: Plus },
   { to: '/reports', label: 'Reports', icon: FileText },
-  { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
-export const Sidebar = ({ onNavigate }) => (
-  <div className="flex h-full flex-col bg-[#070b14] select-none">
-    <div className="flex items-center gap-3 px-6 h-18 border-b border-white/[0.08] shrink-0">
-      <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500/20 via-cyan-500/20 to-violet-500/20 border border-emerald-400/40 text-emerald-300 flex items-center justify-center shadow-[0_0_16px_rgba(16,185,129,0.25)]">
-        <PhantomIcon className="w-5 h-5 text-emerald-300" />
-      </div>
-      <div>
-        <span className="font-extrabold tracking-tight text-white text-base">
-          Phantom<span className="bg-gradient-to-r from-emerald-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent">Trace</span>
-        </span>
-        <span className="block text-[9px] uppercase tracking-widest text-emerald-400/80 font-semibold font-mono">
-          Frankenstein Forensics
-        </span>
-      </div>
-    </div>
-
-    <nav className="flex-1 px-3.5 py-5 space-y-1.5 overflow-y-auto" aria-label="Main Navigation">
-      <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">
-        Platform
-      </div>
-      {NAV.map(({ to, label, icon: Icon }) => (
-        <NavLink
-          key={to}
-          to={to}
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            cn(
-              'group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-              isActive
-                ? 'bg-gradient-to-r from-cyan-500/20 to-violet-500/5 text-white border border-cyan-500/35 font-semibold shadow-[0_2px_12px_rgba(0,201,200,0.15)]'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.05] border border-transparent'
-            )
-          }
-        >
-          {({ isActive }) => (
-            <>
-              {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-cyan-400 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
-              )}
-              <Icon className={cn('w-[18px] h-[18px] shrink-0 transition-colors', isActive ? 'text-cyan-400' : 'text-slate-400 group-hover:text-slate-200')} />
-              <span className="truncate">{label}</span>
-            </>
-          )}
-        </NavLink>
-      ))}
-    </nav>
-
-    <div className="p-4.5 border-t border-white/[0.08] bg-black/30 shrink-0 space-y-2.5">
-      <div className="flex items-center justify-between text-2xs text-slate-400 font-mono">
-        <span className="flex items-center gap-2 font-medium">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-          </span>
-          AI Engine Online
-        </span>
-        <span className="text-slate-400 font-semibold px-2 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.06]">v1.2</span>
-      </div>
-      <p className="text-[11px] text-slate-400 leading-tight">
-        PhantomTrace Autonomous Forensics
-      </p>
-    </div>
-  </div>
+const navItem = ({ isActive }) => cn(
+  'flex min-h-11 items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors lg:min-h-9',
+  isActive
+    ? 'border-cyan-primary bg-cyan-primary/10 text-text-primary'
+    : 'border-transparent text-text-secondary hover:bg-cyber-elevated hover:text-text-primary'
 );
+
+export const Sidebar = ({ onNavigate }) => {
+  const isNewCase = Boolean(useMatch('/investigations/new'));
+
+  return (
+    <div className="flex h-full flex-col">
+      <Link
+        to="/"
+        onClick={onNavigate}
+        className="flex min-h-16 w-fit items-center gap-3 px-4 text-base font-semibold tracking-tight text-text-primary"
+      >
+        <PhantomIcon />
+        <span>PhantomTrace</span>
+      </Link>
+
+      <nav className="flex flex-1 flex-col gap-6 overflow-y-auto border-t border-cyber-border px-3 py-5" aria-label="Main navigation">
+        <div className="space-y-1">
+          <p className="section-label px-3 pb-1">Casework</p>
+          {navigation.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to !== '/investigations' || isNewCase}
+              onClick={onNavigate}
+              className={navItem}
+            >
+              <Icon className="size-4 shrink-0" aria-hidden="true" />
+              {label}
+            </NavLink>
+          ))}
+        </div>
+        <div className="space-y-1">
+          <p className="section-label px-3 pb-1">Account</p>
+          <NavLink to="/settings" onClick={onNavigate} className={navItem}>
+            <Settings className="size-4 shrink-0" aria-hidden="true" />
+            Settings
+          </NavLink>
+        </div>
+      </nav>
+    </div>
+  );
+};
 
 export default Sidebar;

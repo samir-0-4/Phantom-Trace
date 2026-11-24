@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { PlusCircle, ArrowLeft, Shield, Info, AlertCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Input from '../components/ui/Input';
@@ -70,46 +70,38 @@ export const NewInvestigationPage = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 min-w-0">
-      <div>
+    <div className="max-w-5xl space-y-5 min-w-0">
+      <header>
         <Link
           to="/investigations"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors mb-2.5 font-mono"
+          className="text-link mb-3 inline-flex items-center gap-1.5 text-xs"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
+          <ArrowLeft className="size-3.5" aria-hidden="true" />
           <span>Back to investigations</span>
         </Link>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-400 shadow-[0_0_16px_rgba(59,130,246,0.2)]">
-            <PlusCircle className="w-6 h-6" />
-          </div>
-          <span>New Investigation</span>
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-400 mt-1.5">
-          Initialize a new forensic case container before attaching evidence
-        </p>
-      </div>
+        <h1 className="page-heading">New Investigation</h1>
+        <p className="page-lede">Name and categorize the case before attaching evidence.</p>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <Card title="Case details" className="lg:col-span-2 shadow-card">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <Card title="Case details">
           {serverError && (
             <div
               role="alert"
-              className="mb-5 p-3.5 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs sm:text-sm rounded-xl flex items-start gap-2.5 shadow-sm"
+              className="mb-4 flex items-start gap-2 rounded border border-risk-critical/35 bg-risk-critical/10 px-3 py-2.5 text-sm text-text-primary"
             >
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+              <AlertCircle className="mt-0.5 size-4 shrink-0 text-risk-critical" aria-hidden="true" />
               <span>{serverError}</span>
             </div>
           )}
-          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <Input
               label="Investigation title"
               required
               value={fields.title}
               onChange={set('title')}
-              placeholder="e.g. WhatsApp Recruitment Phishing Campaign"
+              placeholder="e.g. Suspicious recruitment messages"
               error={errors.title}
-              hint="Descriptive name identifying the threat actor or scenario"
             />
             <div className="space-y-2">
               <Select
@@ -121,53 +113,32 @@ export const NewInvestigationPage = () => {
                 error={errors.category}
               />
               {fields.category && categoryDescriptions[fields.category] && (
-                <div className="p-3 rounded-xl bg-cyan-500/[0.08] border border-cyan-500/25 text-2xs text-cyan-300 font-mono mt-2 shadow-sm">
-                  <span className="font-bold uppercase tracking-wider text-cyan-400">Scope:</span>{' '}
+                <p className="field-note border-l border-cyber-border pl-3">
                   {categoryDescriptions[fields.category]}
-                </div>
+                </p>
               )}
             </div>
             <Textarea
-              label="Description & context"
+              label="Description & context (optional)"
               value={fields.description}
               onChange={set('description')}
               rows={4}
-              placeholder="Describe background context, initial victim reports, targeted assets, or contact details…"
-              hint="Optional contextual notes attached to the case summary"
+              placeholder="Summarize what was reported and where it was observed…"
             />
-            <div className="flex items-center justify-end gap-3 pt-5 border-t border-white/[0.08]">
-              <Link to="/investigations">
-                <Button variant="secondary" size="md">
-                  Cancel
-                </Button>
-              </Link>
-              <Button type="submit" loading={loading} size="md" className="font-semibold shadow-md">
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-cyber-border pt-4">
+              <Button as={Link} to="/investigations" variant="secondary">Cancel</Button>
+              <Button type="submit" loading={loading} size="md">
                 Initialize Case
               </Button>
             </div>
           </form>
         </Card>
 
-        <div className="space-y-4">
-          <Card title="Investigation Protocol" className="shadow-card">
-            <div className="space-y-3.5 text-xs text-slate-400 leading-relaxed">
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                <Shield className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                <p>
-                  Cases start in <strong className="text-white">DRAFT</strong> status until
-                  evidence items are submitted.
-                </p>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                <p>
-                  You can attach screenshots, raw emails, suspicious URLs, and documents immediately
-                  after creating the dossier.
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
+        <Card title="After creation">
+          <p className="text-sm leading-relaxed text-text-secondary">
+            The case opens as a draft. You can then attach messages, emails, URLs, screenshots, or PDFs.
+          </p>
+        </Card>
       </div>
     </div>
   );

@@ -23,7 +23,7 @@ import { EVIDENCE_TYPES, EVIDENCE_TYPE_OPTIONS } from '../constants';
 import { getApiErrorMessage } from '../services/api/apiClient';
 import evidenceService from '../services/evidence/evidenceService';
 import { investigationService } from '../services/investigation/investigationService';
-import { formatRelative } from '../utils/format';
+import { formatDateTime } from '../utils/format';
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 const FILE_ACCEPT = {
@@ -81,31 +81,25 @@ const typeIcon = {
 const EvidenceRow = ({ item, onRemove, removing }) => {
   const Icon = typeIcon[item.evidenceType] || Paperclip;
   const contentDisplay =
-    item.originalFilename || item.url || item.subject || item.textContent || item.extractedContent;
+    item.originalFilename || item.url || item.subject || item.textContent || item.extractedContent || 'Evidence item';
 
   return (
-    <li className="flex items-start justify-between gap-3 px-5 sm:px-6 py-4.5 hover:bg-white/[0.04] transition-colors group">
-      <div className="flex min-w-0 flex-1 items-start gap-3.5">
-        <div className="mt-0.5 shrink-0 rounded-xl border border-cyan-500/25 bg-cyan-500/10 p-2.5 text-cyan-400 shadow-sm group-hover:scale-105 transition-transform">
-          <Icon className="h-4 w-4" />
-        </div>
+    <li className="flex items-start justify-between gap-2 px-4 py-3">
+      <div className="flex min-w-0 flex-1 items-start gap-3">
+        <Icon className="mt-0.5 size-4 shrink-0 text-text-muted" aria-hidden="true" />
         <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex items-center gap-2">
-            <p className="text-xs font-semibold text-slate-100">
-              {item.evidenceType?.replace('_', ' ')}
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-semibold text-text-primary">
+              {item.evidenceType?.replaceAll('_', ' ') || 'Evidence'}
             </p>
-            {item.status && (
-              <span className="text-2xs font-mono uppercase px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-white/[0.08]">
-                {item.status}
-              </span>
-            )}
+            {item.status && <Badge status={item.status} />}
           </div>
-          <p className="truncate text-xs text-slate-400 font-mono" title={contentDisplay}>
+          <p className="truncate font-mono text-xs text-text-secondary" title={contentDisplay}>
             {contentDisplay}
           </p>
-          <p className="text-2xs text-slate-400 font-mono">
-            {formatRelative(item.createdAt)}
-          </p>
+          <time className="field-note block" dateTime={item.createdAt}>
+            Submitted {formatDateTime(item.createdAt)}
+          </time>
         </div>
       </div>
       <Button
@@ -114,9 +108,10 @@ const EvidenceRow = ({ item, onRemove, removing }) => {
         onClick={() => onRemove(item.id)}
         loading={removing === item.id}
         aria-label={`Remove ${item.evidenceType}`}
-        className="shrink-0 text-slate-400 hover:text-rose-400 p-2 rounded-lg"
+        title="Remove evidence"
+        className="shrink-0 text-text-muted hover:text-risk-critical"
       >
-        <Trash2 className="h-4 w-4" />
+        <Trash2 className="size-4" aria-hidden="true" />
       </Button>
     </li>
   );
@@ -262,47 +257,41 @@ export const EvidenceAnalysisPage = () => {
   if (loading) {
     return (
       <div className="flex justify-center py-24 min-w-0">
-        <Spinner className="h-8 w-8 text-cyan-400" label="Loading evidence workspace…" />
+        <Spinner className="size-6 text-cyan-primary" label="Loading evidence workspace…" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 min-w-0">
-      <div className="border-b border-white/[0.08] pb-6 min-w-0">
+    <div className="min-w-0 max-w-6xl space-y-5">
+      <header>
         <Link
           to={`/investigations/${id}`}
-          className="mb-2.5 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white font-mono transition-colors"
+          className="text-link mb-3 inline-flex items-center gap-1.5 text-xs"
         >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to investigation
+          <ArrowLeft className="size-3.5" aria-hidden="true" /> Back to investigation
         </Link>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-          Evidence workspace
-        </h1>
-        <p className="mt-1 text-xs sm:text-sm text-slate-400">
-          <span className="text-slate-100 font-semibold">{investigation?.title}</span> · Submit
-          multiple evidence items before analysis.
-        </p>
-      </div>
+        <h1 className="page-heading">Evidence workspace</h1>
+        {investigation?.title && <p className="page-lede break-words">{investigation.title}</p>}
+      </header>
 
       {error && (
         <div
           role="alert"
-          className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs sm:text-sm text-rose-300 flex items-start gap-3 shadow-sm"
+          className="flex items-start gap-2 rounded border border-risk-critical/35 bg-risk-critical/10 p-3 text-sm text-text-primary"
         >
-          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+          <AlertCircle className="mt-0.5 size-4 shrink-0 text-risk-critical" aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start min-w-0">
-        <div className="lg:col-span-7 min-w-0">
-          <Card
-            title="Add evidence"
-            subtitle="One item at a time; all items stay attached to this investigation."
-            className="shadow-card"
-          >
-            <form onSubmit={submit} className="space-y-4.5" noValidate>
+      <section
+        aria-label="Evidence intake and submissions"
+        className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]"
+      >
+        <div className="min-w-0">
+          <Card title="Add evidence">
+            <form onSubmit={submit} className="space-y-4" noValidate>
               <Select
                 label="Evidence type"
                 value={fields.evidenceType}
@@ -320,11 +309,11 @@ export const EvidenceAnalysisPage = () => {
                 <Textarea
                   label="Message content"
                   required
-                  rows={6}
+                  rows={5}
                   value={fields.textContent}
                   onChange={updateField('textContent')}
                   error={fieldErrors.textContent}
-                  placeholder="Paste a WhatsApp, SMS, job offer, payment request, or social message…"
+                  placeholder="Paste the message as received…"
                 />
               )}
 
@@ -336,12 +325,12 @@ export const EvidenceAnalysisPage = () => {
                   value={fields.url}
                   onChange={updateField('url')}
                   error={fieldErrors.url}
-                  placeholder="https://example.com/suspicious-link"
+                  placeholder="https://example.com/link"
                 />
               )}
 
               {fields.evidenceType === EVIDENCE_TYPES.EMAIL && (
-                <div className="space-y-3.5">
+                <div className="space-y-3">
                   <Input
                     label="Sender address"
                     required
@@ -357,7 +346,7 @@ export const EvidenceAnalysisPage = () => {
                     value={fields.subject}
                     onChange={updateField('subject')}
                     error={fieldErrors.subject}
-                    placeholder="Urgent notice regarding your account"
+                    placeholder="Subject from the original email"
                   />
                   <Textarea
                     label="Email body"
@@ -366,7 +355,7 @@ export const EvidenceAnalysisPage = () => {
                     value={fields.emailBody}
                     onChange={updateField('emailBody')}
                     error={fieldErrors.emailBody}
-                    placeholder="Paste full raw email body text here…"
+                    placeholder="Paste the email body as received…"
                   />
                   <Textarea
                     label="Headers (optional)"
@@ -389,15 +378,13 @@ export const EvidenceAnalysisPage = () => {
                       event.preventDefault();
                       selectFile(event.dataTransfer.files);
                     }}
-                    className="w-full rounded-2xl border-2 border-dashed border-white/[0.14] bg-[#090e1a]/90 p-7 text-center hover:border-cyan-400/70 hover:bg-cyan-500/[0.05] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 group shadow-inner"
+                    className="w-full min-w-0 rounded border border-dashed border-cyber-border bg-cyber-subtle p-4 text-center transition-colors hover:border-cyan-primary hover:bg-cyber-elevated"
                   >
-                    <div className="mx-auto mb-3 w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-400/25 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform">
-                      <Upload className="h-6 w-6" />
-                    </div>
-                    <span className="block text-xs sm:text-sm font-semibold text-slate-100">
+                    <Upload className="mx-auto mb-2 size-5 text-text-muted" aria-hidden="true" />
+                    <span className="block break-words text-sm font-semibold text-text-primary">
                       {file ? file.name : 'Drop or select a file'}
                     </span>
-                    <span className="mt-1 block text-2xs text-slate-400 font-mono">
+                    <span className="field-note mt-1 block">
                       {fields.evidenceType === EVIDENCE_TYPES.PDF
                         ? 'PDF document'
                         : 'PNG, JPG, JPEG, or WEBP'}{' '}
@@ -407,19 +394,20 @@ export const EvidenceAnalysisPage = () => {
                       <img
                         src={previewUrl}
                         alt="Selected evidence preview"
-                        className="mx-auto mt-4 max-h-36 rounded-xl object-contain border border-white/[0.1] shadow-md"
+                        className="mx-auto mt-3 max-h-36 rounded border border-cyber-border object-contain"
                       />
                     )}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept={FILE_ACCEPT[fields.evidenceType]}
-                      onChange={(event) => selectFile(event.target.files)}
-                      className="hidden"
-                    />
                   </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    aria-label="Select evidence file"
+                    accept={FILE_ACCEPT[fields.evidenceType]}
+                    onChange={(event) => selectFile(event.target.files)}
+                    className="hidden"
+                  />
                   {fieldErrors.file && (
-                    <p className="text-xs text-rose-400 font-medium">{fieldErrors.file}</p>
+                    <p role="alert" className="text-xs font-medium text-risk-critical">{fieldErrors.file}</p>
                   )}
                 </div>
               )}
@@ -429,42 +417,43 @@ export const EvidenceAnalysisPage = () => {
                 rows={2}
                 value={fields.description}
                 onChange={updateField('description')}
-                placeholder="Context notes on where and how this item was received…"
+                placeholder="Where and how was this item received?"
               />
 
               {submitting && progress > 0 && (
-                <div className="h-2 overflow-hidden rounded-full bg-navy-800">
+                <div
+                  role="progressbar"
+                  aria-label="Evidence upload"
+                  aria-valuenow={progress}
+                  className="h-1.5 overflow-hidden rounded-full bg-cyber-elevated"
+                >
                   <div
-                    className="h-full bg-cyan-500 transition-all duration-micro"
+                    className="h-full bg-cyan-primary transition-[width] duration-fast"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
               )}
 
-              <Button type="submit" className="w-full font-semibold shadow-md" loading={submitting}>
-                Add evidence
-              </Button>
+              <div className="flex justify-end border-t border-cyber-border pt-4">
+                <Button type="submit" loading={submitting}>Add evidence</Button>
+              </div>
             </form>
           </Card>
         </div>
 
-        <div className="lg:col-span-5 min-w-0">
+        <div className="min-w-0">
           <Card
             title={`Evidence submitted (${evidence.length})`}
-            subtitle="Only you can access these items."
             padded={false}
-            className="min-w-0 shadow-card"
           >
             {evidence.length === 0 ? (
-              <div className="p-6">
-                <EmptyState
-                  icon={Paperclip}
-                  title="No evidence yet"
-                  message="Submit a message, URL, email, image, or PDF to begin building this case."
-                />
-              </div>
+              <EmptyState
+                icon={Paperclip}
+                title="No evidence yet"
+                message="Submitted items will appear here with their source type and intake time."
+              />
             ) : (
-              <ul className="divide-y divide-white/[0.06] max-h-[560px] overflow-y-auto">
+              <ul className="divide-y divide-cyber-border">
                 {evidence.map((item) => (
                   <EvidenceRow
                     key={item.id}
@@ -477,19 +466,18 @@ export const EvidenceAnalysisPage = () => {
             )}
           </Card>
         </div>
-      </div>
+      </section>
 
       <Card
         title="Threat intelligence"
         subtitle="Optional external verification. Unavailable providers are never treated as clean."
-        className="shadow-card"
+        padded={false}
         headerAction={
           <Button
             variant="secondary"
-            size="xs"
+            size="sm"
             onClick={runThreatLookups}
             loading={threatLoading}
-            className="font-mono text-2xs font-semibold"
           >
             Verify URLs
           </Button>
@@ -502,17 +490,14 @@ export const EvidenceAnalysisPage = () => {
             message="Run verification for submitted URL evidence when provider credentials are configured."
           />
         ) : (
-          <div className="space-y-3">
+          <ul className="divide-y divide-cyber-border">
             {threatResults.map((result) => (
-              <div
-                key={result.id}
-                className="rounded-2xl border border-white/[0.08] bg-[#0c101c] p-4.5 space-y-2 shadow-sm"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-bold text-slate-100 font-mono">
+              <li key={result.id} className="space-y-2 px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-semibold text-text-primary">
                     {result.provider}
                   </span>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <Badge variant={result.threatStatus}>
                       {result.threatStatus?.replaceAll('_', ' ')}
                     </Badge>
@@ -522,15 +507,15 @@ export const EvidenceAnalysisPage = () => {
                     )}
                   </div>
                 </div>
-                <p className="break-all text-xs font-mono text-slate-300">{result.indicator}</p>
-                <p className="text-2xs text-slate-400 leading-relaxed">
+                <p className="break-all font-mono text-xs text-text-primary">{result.indicator}</p>
+                <p className="field-note break-words">
                   {result.errorMessage ||
                     result.resultDetails ||
                     'No additional provider details were reported.'}
                 </p>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </Card>
     </div>
