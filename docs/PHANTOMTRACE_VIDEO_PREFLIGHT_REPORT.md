@@ -33,6 +33,6 @@ Playwright recorded the production PhantomTrace frontend and backend after Rende
 
 ## Capture checks
 
-- The application clips were recorded from the live Chromium viewport at 1920 × 1080 and 30 fps. ffprobe confirmed VP9 source clips. The browser clips carry picture only, with audio handled in the final edit.
+- Playwright recorded the live Chromium viewport at 1920 × 1080 and 30 fps. FFprobe confirmed picture-only VP9 source clips.
 - Response codes and visible UI assertions verified the workflow. Browser-console logging was outside the capture instrumentation.
-- The capture script is [`video/recording/phantomtrace-demo.spec.js`](../video/recording/phantomtrace-demo.spec.js). The sanitized report records aggregate outcomes. Authentication credentials and session data were kept outside project artifacts.
+- This report records aggregate outcomes from the Playwright capture. Authentication credentials and session data were kept outside project artifacts.

@@ -20,4 +20,4 @@
 
 The project uses fictional inputs and reserved test indicators. The Kiro chapter shows configuration and spec navigation. Hook execution remains unverified.
 
-The original local cut at the same runtime contains the earlier HTTP 404 at 0:48–1:10 and the dossier from that case at 1:47–2:03. The submission cut replaces those sections with the 22 November production retakes. [Production report](PRODUCTION_REPORT.md) · [Submission edit manifest](submission/segments.json)
+The original local cut at the same runtime contains the earlier HTTP 404 at 0:48–1:10 and the dossier from that case at 1:47–2:03. The submission cut replaces those sections with the 22 November production retakes. [Production report](PRODUCTION_REPORT.md)

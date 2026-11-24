@@ -36,7 +36,7 @@ On 23 November, the first browser sign-in timed out before the health endpoint r
 
 ### Submission cut export
 
-The separate submission cut replaces the earlier AI and report sections with genuine production retakes. Burned-in English captions carry the narration, with no audio stream. The cut omits the original’s Apple Daniel System Voice, whose license limits sharing. The original export remains byte-for-byte intact. [Shot list](SHOT_LIST.md) · [Submission edit manifest](submission/segments.json) · [Apple macOS Tahoe license §2.F](https://www.apple.com/legal/sla/docs/macOSTahoe.pdf#page=3)
+The submission cut combines recordings of the live production application and the native Kiro IDE. Playwright automated the browser interactions, and FFmpeg assembled the footage with burned-in English captions. The revised AI and report scenes come from the 22 November production retakes. The original local export contains Apple’s Daniel System Voice, whose license limits sharing. [Shot list](SHOT_LIST.md) · [Apple macOS Tahoe license §2.F](https://www.apple.com/legal/sla/docs/macOSTahoe.pdf#page=3)
 
 | Check | Result |
 | --- | --- |
@@ -54,7 +54,7 @@ The local raw retakes are `raw/production-ai-success.webm` and `raw/production-r
 
 The deployment commit contains the reviewed application, Kiro, evidence, license and guide changes. [Exact deployed commit diff](https://github.com/samir-0-4/Phantom-Trace/commit/9dfa16a380545c87a5a0c240e19753eb5b828b3d)
 
-The verification update covers `docs/DEPLOYMENT_NOTES.md`, `docs/JUDGE_GUIDE.md`, `docs/PHANTOMTRACE_KIRO_EVIDENCE_REPORT.md`, `docs/hackathon/DEVPOST_SUBMISSION.md`, `docs/hackathon/rules-verification.md`, `video/PRODUCTION_REPORT.md`, `video/SHOT_LIST.md`, and `video/submission/segments.json`. The local export also uses `video/submission/render.py` and the two local raw retakes listed above.
+The verification update documents deployment, judge access, Kiro evidence, and the submission shots. [Verification commit](https://github.com/samir-0-4/Phantom-Trace/commit/d95386494d6abb8f979f0f3e1b0ce54dec9964cf)
 
 ## Original cut and 21 November audit
 
@@ -73,7 +73,7 @@ The verification update covers `docs/DEPLOYMENT_NOTES.md`, `docs/JUDGE_GUIDE.md`
 
 ### Editing and export
 
-The 13-chapter edit uses fresh production browser recordings and native Kiro footage. FFmpeg assembled the clips, graphic title and caption rails, and English narration from the local macOS Daniel voice. Captions are burned into the picture. The edit trims service waits, preserves the original UI, and crops the Kiro status bar. The raw media and reproducible cuts are saved in `video/raw/` and `video/recording/`. [Shot list](SHOT_LIST.md) · [Edit manifest](recording/segments.json)
+The 13-chapter edit uses fresh production browser recordings and native Kiro footage. FFmpeg assembled the clips, graphic title and caption rails, and English narration from the local macOS Daniel voice. Captions are burned into the picture. The edit trims service waits, preserves the original UI, and crops the Kiro status bar. The raw media and editing files were kept locally. [Shot list](SHOT_LIST.md)
 
 | Check | Result |
 | --- | --- |
