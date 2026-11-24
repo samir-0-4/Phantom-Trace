@@ -16,6 +16,7 @@
 [![Kiroween Category](https://img.shields.io/badge/Kiroween%202026-Frankenstein-red.svg)]()
 
 > 🌐 **Live Public Deployment & Documentation:**
+> - 🎥 **[Video Demo Walkthrough](https://youtu.be/Xlnl08geuQg)** — 2:50 platform demonstration on YouTube
 > - **Frontend Application (Vercel):** [https://phantomtrace04.vercel.app](https://phantomtrace04.vercel.app)
 > - **Backend REST API (Render):** [https://phantomtrace-backend-vhxt.onrender.com](https://phantomtrace-backend-vhxt.onrender.com)
 > - **Live Health Diagnostic:** [`https://phantomtrace-backend-vhxt.onrender.com/api/v1/health`](https://phantomtrace-backend-vhxt.onrender.com/api/v1/health)
@@ -28,6 +29,10 @@
 ---
 
 ## Demo & Screenshots
+
+[![Watch PhantomTrace Demo](https://img.youtube.com/vi/Xlnl08geuQg/maxresdefault.jpg)](https://youtu.be/Xlnl08geuQg)
+
+🎥 **[Watch PhantomTrace Demo Walkthrough on YouTube (2:50)](https://youtu.be/Xlnl08geuQg)**
 
 Follow the [judge guide](docs/JUDGE_GUIDE.md) to explore the built-in synthetic investigation.
 

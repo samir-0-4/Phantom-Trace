@@ -22,7 +22,7 @@ This audit records the earlier review. Use the [current rules verification](hack
 | 5 | **`.kiro/` files tracked by Git** | **VERIFY FINAL BRANCH** | The root directory is tracked and `.gitignore` explicitly includes `!.kiro/` and `!.kiro/**`. Verify the final hook and profile files on the public default branch. |
 | 6 | **Recognized open-source license** | **VERIFY ON GITHUB** | The earlier public Apache-style file was abbreviated. Confirm GitHub About recognizes the final license after publication. |
 | 7 | **Functional Application Live URL** | **PASS** | Frontend is live at `https://phantomtrace04.vercel.app`, routing to backend API at `https://phantomtrace-backend-vhxt.onrender.com/api/v1`. |
-| 8 | **Public YouTube demo video under three minutes** | **PENDING** | The 2:50 local draft is documented in local production records. Enter the publicly visible YouTube URL in Devpost after the public release is approved. |
+| 8 | **Public YouTube demo video under three minutes** | **PASS** | Published on YouTube at [https://youtu.be/Xlnl08geuQg](https://youtu.be/Xlnl08geuQg) (runtime 2:50). |
 | 9 | **Project Description & Narrative** | **PASS** | Comprehensive problem statement, forensic architecture, truth framework, and UI gallery documented in `README.md`. |
 | 10 | **Kiro Usage Write-Up & Proof** | **PASS** | Comprehensive Kiro documentation in `docs/KIRO_USAGE.md` detailing specs, hooks, custom agents, MCP configs, steering, and property-based testing. |
 | 11 | **Hackathon Category Fit (Frankenstein)** | **PASS** | Perfectly embodies Frankenstein: combining deterministic cryptographic parsers, regex extractors, graph algorithms, and six concurrent generative LLM agents into a unified, self-contained cyber forensic platform. |
@@ -82,5 +82,5 @@ The repository contains 35+ tracked Kiro artifacts:
    - Category: **Frankenstein**
    - Repository URL: `https://github.com/samir-0-4/Phantom-Trace`
    - Application URL: `https://phantomtrace04.vercel.app`
-   - Video URL: *Your public YouTube video link*
-3. **Optionally link the published video in the README.** The required link belongs in the Devpost submission.
+   - Video URL: https://youtu.be/Xlnl08geuQg
+3. **Verified video link in README.md:** Included in header quick links and Demo & Screenshots section.
